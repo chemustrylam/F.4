@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Periodic Table Elements Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .quiz-container {
+            max-width: 800px;
+            margin: auto;
+        }
+        .btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .correct {
+            background-color: #22c55e !important;
+            color: white !important;
+            border-color: #16a34a !important;
+        }
+        .incorrect {
+            background-color: #ef4444 !important;
+            color: white !important;
+            border-color: #dc2626 !important;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background-color: #4f46e5;
+            border-radius: 0.25rem;
+            transition: width 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <div id="quiz-app" class="quiz-container w-full">
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="text-center bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl">
+            <h1 class="text-4xl font-bold text-indigo-600 dark:text-indigo-400 mb-4">First 20 Elements Quiz</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-400 mb-8">Choose a section to begin your training.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                 <button onclick="startQuiz(1)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-lg text-lg btn">Section 1: Name from Symbol</button>
+                 <button onclick="startQuiz(2)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-lg text-lg btn">Section 2: Symbol from Name</button>
+                 <button onclick="startQuiz(3)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-lg text-lg btn">Section 3: Name from Atomic Number</button>
+                 <button onclick="startQuiz(4)" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-4 px-6 rounded-lg text-lg btn">Section 4: Symbol from Atomic Number</button>
+                 <button onclick="startQuiz(5)" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-4 px-6 rounded-lg text-lg btn col-span-1 sm:col-span-2 lg:col-span-3">Section 5: Mixed Match</button>
+            </div>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-xl">
+            <div class="flex justify-between items-center mb-4">
+                <div id="question-counter" class="text-sm font-semibold text-gray-500 dark:text-gray-400"></div>
+                <div id="score-counter" class="text-sm font-semibold text-indigo-500">Score: 0</div>
+            </div>
+            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-6">
+                <div id="progress-bar" class="progress-bar-fill" style="width: 0%"></div>
+            </div>
+            
+            <h2 id="question-text" class="text-2xl font-semibold mb-6 min-h-[6rem]"></h2>
+            
+            <div id="answer-options" class="space-y-4">
+                <!-- Options will be injected here -->
+            </div>
+            
+            <div id="feedback" class="mt-6 text-center font-semibold"></div>
+            <button id="next-btn" class="w-full mt-4 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg btn hidden">Next Question</button>
+            <button id="back-to-menu-quiz" class="w-full mt-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-lg btn">Back to Menu</button>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-screen" class="hidden text-center bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl">
+            <h1 class="text-4xl font-bold mb-4">Section Complete!</h1>
+            <p class="text-2xl mb-2">Your Final Score:</p>
+            <p id="final-score" class="text-6xl font-extrabold text-indigo-500 mb-8"></p>
+            <p id="final-message" class="text-lg text-gray-600 dark:text-gray-400 mb-8"></p>
+            <button id="restart-btn" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-10 rounded-lg text-xl btn">Play Section Again</button>
+            <button id="back-to-menu-results" class="w-full sm:w-auto mt-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-4 px-10 rounded-lg text-xl btn">Back to Menu</button>
+        </div>
+
+    </div>
+
+    <script>
+        const quizData = [
+            // Section 1: Identify the Name (Given Atomic Symbol)
+            { section: 1, question: 'What is the name of the element with the atomic symbol H?', options: ['Helium', 'Hafnium', 'Hydrogen', 'Hassium'], answer: 'Hydrogen' },
+            { section: 1, question: 'What is the name of the element with the atomic symbol He?', options: ['Hydrogen', 'Helium', 'Holmium', 'Hassium'], answer: 'Helium' },
+            { section: 1, question: 'What is the name of the element with the atomic symbol Li?', options: ['Lead', 'Lithium', 'Livermorium', 'Lutetium'], answer: 'Lithium' },
+            { section: 1, question: 'What is the name of the element with the atomic symbol Be?', options: ['Boron', 'Barium', 'Beryllium', 'Berkelium'], answer: 'Beryllium' },
+            { section: 1, question: 'What is the name of the element with the atomic symbol B?', options: ['Beryllium', 'Boron', 'Bromine', 'Bismuth'], answer: 'Boron' },
+            { section: 1, question: 'What is the name of the element with the atomic symbol C?', options: ['Calcium', 'Chromium', 'Copper', 'Carbon'], answer: 'Carbon' },
+            { section: 1, question: 'What is the name of the element with the atomic symbol N?', options: ['Neon', 'Nickel', 'Nitrogen', 'Niobium'], answer: 'Nitrogen' },
+            { section: 1, question: 'What is the name of the element with the atomic symbol O?', options: ['Osmium', 'Oxygen', 'Oganesson', 'Gold'], answer: 'Oxygen' },
+            { section: 1, question: 'What is the name of the element with the atomic symbol F?', options: ['Francium', 'Iron', 'Fermium', 'Fluorine'], answer: 'Fluorine' },
+            { section: 1, question: 'What is the name of the element with the atomic symbol Ne?', options: ['Nitrogen', 'Nickel', 'Neon', 'Niobium'], answer: 'Neon' },
+            { section: 1, question: 'What is the name of the element with the atomic symbol Na?', options: ['Nitrogen', 'Sodium', 'Neon', 'Natrium'], answer: 'Sodium' },
+            { section: 1, question: 'What is the name of the element with the atomic symbol Mg?', options: ['Manganese', 'Mercury', 'Magnesium', 'Molybdenum'], answer: 'Magnesium' },
+            { section: 1, question: 'What is the name of the element with the atomic symbol Al?', options: ['Argon', 'Gold', 'Aluminium', 'Actinium'], answer: 'Aluminium' },
+            { section: 1, question: 'What is the name of the element with the atomic symbol Si?', options: ['Silver', 'Sulfur', 'Silicon', 'Selenium'], answer: 'Silicon' },
+            { section: 1, question: 'What is the name of the element with the atomic symbol P?', options: ['Potassium', 'Phosphorus', 'Plutonium', 'Protactinium'], answer: 'Phosphorus' },
+            { section: 1, question: 'What is the name of the element with the atomic symbol S?', options: ['Selenium', 'Silicon', 'Sulfur', 'Scandium'], answer: 'Sulfur' },
+            { section: 1, question: 'What is the name of the element with the atomic symbol Cl?', options: ['Carbon', 'Calcium', 'Chlorine', 'Chromium'], answer: 'Chlorine' },
+            { section: 1, question: 'What is the name of the element with the atomic symbol Ar?', options: ['Aluminium', 'Argon', 'Arsenic', 'Astatine'], answer: 'Argon' },
+            { section: 1, question: 'What is the name of the element with the atomic symbol K?', options: ['Krypton', 'Silicon', 'Potassium', 'Kurchatovium'], answer: 'Potassium' },
+            { section: 1, question: 'What is the name of the element with the atomic symbol Ca?', options: ['Carbon', 'Cadmium', 'Calcium', 'Californium'], answer: 'Calcium' },
+            
+            // Section 2: Identify the Atomic Symbol (Given Element Name)
+            { section: 2, question: 'What is the atomic symbol for Hydrogen?', options: ['He', 'Hy', 'H', 'Hg'], answer: 'H' },
+            { section: 2, question: 'What is the atomic symbol for Helium?', options: ['H', 'He', 'Hl', 'Hm'], answer: 'He' },
+            { section: 2, question: 'What is the atomic symbol for Lithium?', options: ['L', 'Li', 'Lt', 'La'], answer: 'Li' },
+            { section: 2, question: 'What is the atomic symbol for Beryllium?', options: ['B', 'Br', 'Be', 'Ba'], answer: 'Be' },
+            { section: 2, question: 'What is the atomic symbol for Boron?', options: ['Be', 'B', 'Bo', 'Bi'], answer: 'B' },
+            { section: 2, question: 'What is the atomic symbol for Carbon?', options: ['Ca', 'Co', 'Cr', 'C'], answer: 'C' },
+            { section: 2, question: 'What is the atomic symbol for Nitrogen?', options: ['Ne', 'Ni', 'N', 'Na'], answer: 'N' },
+            { section: 2, question: 'What is the atomic symbol for Oxygen?', options: ['O', 'Ox', 'Os', 'Og'], answer: 'O' },
+            { section: 2, question: 'What is the atomic symbol for Fluorine?', options: ['Fr', 'Fe', 'F', 'Fl'], answer: 'F' },
+            { section: 2, question: 'What is the atomic symbol for Neon?', options: ['N', 'Ni', 'Ne', 'Nb'], answer: 'Ne' },
+            { section: 2, question: 'What is the atomic symbol for Sodium?', options: ['S', 'So', 'Na', 'Sd'], answer: 'Na' },
+            { section: 2, question: 'What is the atomic symbol for Magnesium?', options: ['Mn', 'Ma', 'Mg', 'Me'], answer: 'Mg' },
+            { section: 2, question: 'What is the atomic symbol for Aluminium?', options: ['Ar', 'Au', 'Al', 'Ag'], answer: 'Al' },
+            { section: 2, question: 'What is the atomic symbol for Silicon?', options: ['S', 'Si', 'Sl', 'Se'], answer: 'Si' },
+            { section: 2, question: 'What is the atomic symbol for Phosphorus?', options: ['Po', 'Pt', 'P', 'Ph'], answer: 'P' },
+            { section: 2, question: 'What is the atomic symbol for Sulfur?', options: ['Se', 'Su', 'Sf', 'S'], answer: 'S' },
+            { section: 2, question: 'What is the atomic symbol for Chlorine?', options: ['C', 'Ch', 'Cl', 'Cr'], answer: 'Cl' },
+            { section: 2, question: 'What is the atomic symbol for Argon?', options: ['Al', 'Ar', 'As', 'Ag'], answer: 'Ar' },
+            { section: 2, question: 'What is the atomic symbol for Potassium?', options: ['P', 'Po', 'Pt', 'K'], answer: 'K' },
+            { section: 2, question: 'What is the atomic symbol for Calcium?', options: ['C', 'Cd', 'Ca', 'Cm'], answer: 'Ca' },
+            
+            // Section 3: Identify the Element Name (Given Atomic Number)
+            { section: 3, question: 'The element with atomic number 1 is:', options: ['Helium', 'Hydrogen', 'Lithium', 'Beryllium'], answer: 'Hydrogen' },
+            { section: 3, question: 'The element with atomic number 2 is:', options: ['Hydrogen', 'Lithium', 'Helium', 'Beryllium'], answer: 'Helium' },
+            { section: 3, question: 'The element with atomic number 3 is:', options: ['Hydrogen', 'Lithium', 'Beryllium', 'Boron'], answer: 'Lithium' },
+            { section: 3, question: 'The element with atomic number 4 is:', options: ['Lithium', 'Boron', 'Beryllium', 'Carbon'], answer: 'Beryllium' },
+            { section: 3, question: 'The element with atomic number 5 is:', options: ['Beryllium', 'Carbon', 'Boron', 'Nitrogen'], answer: 'Boron' },
+            { section: 3, question: 'The element with atomic number 6 is:', options: ['Boron', 'Nitrogen', 'Carbon', 'Oxygen'], answer: 'Carbon' },
+            { section: 3, question: 'The element with atomic number 7 is:', options: ['Carbon', 'Oxygen', 'Nitrogen', 'Fluorine'], answer: 'Nitrogen' },
+            { section: 3, question: 'The element with atomic number 8 is:', options: ['Nitrogen', 'Fluorine', 'Oxygen', 'Neon'], answer: 'Oxygen' },
+            { section: 3, question: 'The element with atomic number 9 is:', options: ['Oxygen', 'Neon', 'Fluorine', 'Sodium'], answer: 'Fluorine' },
+            { section: 3, question: 'The element with atomic number 10 is:', options: ['Fluorine', 'Sodium', 'Neon', 'Magnesium'], answer: 'Neon' },
+            { section: 3, question: 'The element with atomic number 11 is:', options: ['Neon', 'Magnesium', 'Sodium', 'Aluminium'], answer: 'Sodium' },
+            { section: 3, question: 'The element with atomic number 12 is:', options: ['Sodium', 'Aluminium', 'Magnesium', 'Silicon'], answer: 'Magnesium' },
+            { section: 3, question: 'The element with atomic number 13 is:', options: ['Magnesium', 'Silicon', 'Aluminium', 'Phosphorus'], answer: 'Aluminium' },
+            { section: 3, question: 'The element with atomic number 14 is:', options: ['Aluminium', 'Phosphorus', 'Silicon', 'Sulfur'], answer: 'Silicon' },
+            { section: 3, question: 'The element with atomic number 15 is:', options: ['Silicon', 'Sulfur', 'Phosphorus', 'Chlorine'], answer: 'Phosphorus' },
+            { section: 3, question: 'The element with atomic number 16 is:', options: ['Phosphorus', 'Chlorine', 'Sulfur', 'Argon'], answer: 'Sulfur' },
+            { section: 3, question: 'The element with atomic number 17 is:', options: ['Sulfur', 'Argon', 'Chlorine', 'Potassium'], answer: 'Chlorine' },
+            { section: 3, question: 'The element with atomic number 18 is:', options: ['Chlorine', 'Potassium', 'Argon', 'Calcium'], answer: 'Argon' },
+            { section: 3, question: 'The element with atomic number 19 is:', options: ['Argon', 'Calcium', 'Potassium', 'Scandium'], answer: 'Potassium' },
+            { section: 3, question: 'The element with atomic number 20 is:', options: ['Potassium', 'Scandium', 'Calcium', 'Titanium'], answer: 'Calcium' },
+
+            // Section 4: Identify the Atomic Symbol (Given Atomic Number)
+            { section: 4, question: 'The element with atomic number 1 has the symbol:', options: ['He', 'Hf', 'H', 'Hs'], answer: 'H' },
+            { section: 4, question: 'The element with atomic number 2 has the symbol:', options: ['H', 'Li', 'He', 'Be'], answer: 'He' },
+            { section: 4, question: 'The element with atomic number 3 has the symbol:', options: ['H', 'Li', 'B', 'Be'], answer: 'Li' },
+            { section: 4, question: 'The element with atomic number 4 has the symbol:', options: ['Li', 'B', 'Be', 'C'], answer: 'Be' },
+            { section: 4, question: 'The element with atomic number 5 has the symbol:', options: ['Be', 'C', 'B', 'N'], answer: 'B' },
+            { section: 4, question: 'The element with atomic number 6 has the symbol:', options: ['B', 'N', 'C', 'O'], answer: 'C' },
+            { section: 4, question: 'The element with atomic number 7 has the symbol:', options: ['C', 'O', 'N', 'F'], answer: 'N' },
+            { section: 4, question: 'The element with atomic number 8 has the symbol:', options: ['N', 'F', 'O', 'Ne'], answer: 'O' },
+            { section: 4, question: 'The element with atomic number 9 has the symbol:', options: ['O', 'Ne', 'F', 'Na'], answer: 'F' },
+            { section: 4, question: 'The element with atomic number 10 has the symbol:', options: ['F', 'Na', 'Ne', 'Mg'], answer: 'Ne' },
+            { section: 4, question: 'The element with atomic number 11 has the symbol:', options: ['Ne', 'Mg', 'Na', 'Al'], answer: 'Na' },
+            { section: 4, question: 'The element with atomic number 12 has the symbol:', options: ['Na', 'Al', 'Mg', 'Si'], answer: 'Mg' },
+            { section: 4, question: 'The element with atomic number 13 has the symbol:', options: ['Mg', 'Si', 'Al', 'P'], answer: 'Al' },
+            { section: 4, question: 'The element with atomic number 14 has the symbol:', options: ['Al', 'P', 'Si', 'S'], answer: 'Si' },
+            { section: 4, question: 'The element with atomic number 15 has the symbol:', options: ['Si', 'S', 'P', 'Cl'], answer: 'P' },
+            { section: 4, question: 'The element with atomic number 16 has the symbol:', options: ['P', 'Cl', 'S', 'Ar'], answer: 'S' },
+            { section: 4, question: 'The element with atomic number 17 has the symbol:', options: ['S', 'Ar', 'Cl', 'K'], answer: 'Cl' },
+            { section: 4, question: 'The element with atomic number 18 has the symbol:', options: ['Cl', 'K', 'Ar', 'Ca'], answer: 'Ar' },
+            { section: 4, question: 'The element with atomic number 19 has the symbol:', options: ['Ar', 'Ca', 'K', 'Sc'], answer: 'K' },
+            { section: 4, question: 'The element with atomic number 20 has the symbol:', options: ['K', 'Sc', 'Ca', 'Ti'], answer: 'Ca' },
+
+            // Section 5: Mixed Match
+            { section: 5, question: 'Which combination is correct?', options: ['1 - Helium - H', '1 - Hydrogen - He', '1 - Hydrogen - H', '2 - Hydrogen - He'], answer: '1 - Hydrogen - H' },
+            { section: 5, question: 'Which combination is correct?', options: ['2 - Hydrogen - H', '2 - Helium - He', '3 - Helium - Li', '3 - Lithium - He'], answer: '2 - Helium - He' },
+            { section: 5, question: 'Which combination is correct?', options: ['3 - Lithium - Li', '4 - Lithium - Be', '4 - Beryllium - B', '5 - Beryllium - Be'], answer: '3 - Lithium - Li' },
+            { section: 5, question: 'Which combination is correct?', options: ['4 - Boron - B', '5 - Beryllium - Be', '5 - Boron - B', '6 - Boron - C'], answer: '5 - Boron - B' },
+            { section: 5, question: 'Which combination is correct?', options: ['6 - Nitrogen - N', '6 - Carbon - C', '7 - Carbon - C', '7 - Oxygen - O'], answer: '6 - Carbon - C' },
+            { section: 5, question: 'Which combination is correct?', options: ['7 - Oxygen - O', '8 - Nitrogen - N', '8 - Oxygen - O', '9 - Oxygen - F'], answer: '8 - Oxygen - O' },
+            { section: 5, question: 'Which combination is correct?', options: ['9 - Neon - Ne', '9 - Fluorine - F', '10 - Fluorine - F', '10 - Sodium - Na'], answer: '9 - Fluorine - F' },
+            { section: 5, question: 'Which combination is correct?', options: ['10 - Neon - Ne', '11 - Neon - Ne', '11 - Magnesium - Mg', '12 - Sodium - Na'], answer: '10 - Neon - Ne' },
+            { section: 5, question: 'Which combination is correct?', options: ['11 - Magnesium - Mg', '12 - Sodium - Na', '12 - Magnesium - Mg', '13 - Magnesium - Al'], answer: '12 - Magnesium - Mg' },
+            { section: 5, question: 'Which combination is correct?', options: ['13 - Silicon - Si', '13 - Aluminium - Al', '14 - Aluminium - Al', '14 - Phosphorus - P'], answer: '13 - Aluminium - Al' },
+            { section: 5, question: 'Which combination is correct?', options: ['14 - Phosphorus - P', '14 - Silicon - Si', '15 - Silicon - Si', '15 - Sulfur - S'], answer: '14 - Silicon - Si' },
+            { section: 5, question: 'Which combination is correct?', options: ['15 - Sulfur - S', '15 - Phosphorus - P', '16 - Phosphorus - P', '16 - Chlorine - Cl'], answer: '15 - Phosphorus - P' },
+            { section: 5, question: 'Which combination is correct?', options: ['16 - Chlorine - Cl', '16 - Sulfur - S', '17 - Sulfur - S', '17 - Argon - Ar'], answer: '16 - Sulfur - S' },
+            { section: 5, question: 'Which combination is correct?', options: ['17 - Argon - Ar', '17 - Chlorine - Cl', '18 - Chlorine - Cl', '18 - Potassium - K'], answer: '17 - Chlorine - Cl' },
+            { section: 5, question: 'Which combination is correct?', options: ['18 - Potassium - K', '18 - Argon - Ar', '19 - Argon - Ar', '19 - Calcium - Ca'], answer: '18 - Argon - Ar' },
+            { section: 5, question: 'Which combination is correct?', options: ['19 - Calcium - Ca', '19 - Potassium - K', '20 - Potassium - K', '20 - Scandium - Sc'], answer: '19 - Potassium - K' },
+            { section: 5, question: 'The atomic symbol for element 16, Sulfur, is:', options: ['Si', 'P', 'S', 'Cl'], answer: 'S' },
+            { section: 5, question: 'The name of the element with atomic number 19 is:', options: ['Argon', 'Calcium', 'Potassium', 'Chlorine'], answer: 'Potassium' },
+            { section: 5, question: 'Which element has the atomic symbol Na and an atomic number of 11?', options: ['Neon', 'Magnesium', 'Sodium', 'Aluminium'], answer: 'Sodium' },
+            { section: 5, question: 'The element with the atomic number 20 is called:', options: ['Potassium', 'Argon', 'Calcium', 'Chlorine'], answer: 'Calcium' }
+        ];
+
+        // --- DOM Elements ---
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultsScreen = document.getElementById('results-screen');
+        
+        const restartBtn = document.getElementById('restart-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const backToMenuQuizBtn = document.getElementById('back-to-menu-quiz');
+        const backToMenuResultsBtn = document.getElementById('back-to-menu-results');
+
+        const questionCounter = document.getElementById('question-counter');
+        const scoreCounter = document.getElementById('score-counter');
+        const progressBar = document.getElementById('progress-bar');
+        const questionText = document.getElementById('question-text');
+        const answerOptionsContainer = document.getElementById('answer-options');
+        
+        const finalScore = document.getElementById('final-score');
+        const finalMessage = document.getElementById('final-message');
+
+        // --- Quiz State ---
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let currentSection = 0;
+        let sectionQuestions = [];
+
+        // --- Functions ---
+        function startQuiz(section) {
+            currentSection = section;
+            sectionQuestions = quizData.filter(q => q.section === section);
+            currentQuestionIndex = 0;
+            score = 0;
+            
+            startScreen.classList.add('hidden');
+            resultsScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            nextBtn.classList.add('hidden');
+            
+            updateScore();
+            showQuestion();
+        }
+
+        function showQuestion() {
+            resetState();
+            const currentQuestion = sectionQuestions[currentQuestionIndex];
+            
+            questionCounter.textContent = `Question ${currentQuestionIndex + 1} / ${sectionQuestions.length}`;
+            progressBar.style.width = `${((currentQuestionIndex + 1) / sectionQuestions.length) * 100}%`;
+            questionText.innerHTML = currentQuestion.question;
+
+            currentQuestion.options.forEach(option => {
+                const button = document.createElement('button');
+                button.innerHTML = option;
+                button.classList.add('block', 'w-full', 'text-left', 'p-4', 'rounded-lg', 'border-2', 'border-gray-300', 'dark:border-gray-600', 'bg-white', 'dark:bg-gray-800', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'btn');
+                button.addEventListener('click', () => selectAnswer(button, option));
+                answerOptionsContainer.appendChild(button);
+            });
+        }
+
+        function resetState() {
+            feedback.textContent = '';
+            nextBtn.classList.add('hidden');
+            while (answerOptionsContainer.firstChild) {
+                answerOptionsContainer.removeChild(answerOptionsContainer.firstChild);
+            }
+        }
+
+        function selectAnswer(button, selectedOption) {
+            const currentQuestion = sectionQuestions[currentQuestionIndex];
+            const correct = selectedOption === currentQuestion.answer;
+            
+            if (correct) {
+                score++;
+                feedback.textContent = "Correct!";
+                feedback.classList.add('text-green-500');
+                feedback.classList.remove('text-red-500');
+                button.classList.add('correct');
+            } else {
+                feedback.innerHTML = `Incorrect. The correct answer is: <br><strong>${currentQuestion.answer}</strong>`;
+                feedback.classList.add('text-red-500');
+                feedback.classList.remove('text-green-500');
+                button.classList.add('incorrect');
+                // Highlight correct answer
+                Array.from(answerOptionsContainer.children).forEach(btn => {
+                    if (btn.innerHTML === currentQuestion.answer) {
+                        btn.classList.add('correct');
+                    }
+                });
+            }
+
+            Array.from(answerOptionsContainer.children).forEach(btn => {
+                btn.disabled = true; // Disable all buttons
+            });
+
+            updateScore();
+            nextBtn.classList.remove('hidden');
+        }
+
+        function updateScore() {
+            scoreCounter.textContent = `Score: ${score}`;
+        }
+        
+        function showNextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < sectionQuestions.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            quizScreen.classList.add('hidden');
+            resultsScreen.classList.remove('hidden');
+            
+            const percentage = Math.round((score / sectionQuestions.length) * 100);
+            finalScore.textContent = `${percentage}%`;
+            
+            let message = '';
+            if (percentage === 100) {
+                message = "Perfect score! You're an elements expert!";
+            } else if (percentage >= 80) {
+                message = "Excellent job! You have a strong command of this section.";
+            } else if (percentage >= 60) {
+                message = "Good effort! A little more practice and you'll be an expert.";
+            } else {
+                message = "Keep practicing! Repetition is key to memorizing these elements.";
+            }
+            finalMessage.textContent = message;
+        }
+
+        function showMenu() {
+             quizScreen.classList.add('hidden');
+             resultsScreen.classList.add('hidden');
+             startScreen.classList.remove('hidden');
+        }
+
+        // --- Event Listeners ---
+        restartBtn.addEventListener('click', () => startQuiz(currentSection));
+        nextBtn.addEventListener('click', showNextQuestion);
+        backToMenuQuizBtn.addEventListener('click', showMenu);
+        backToMenuResultsBtn.addEventListener('click', showMenu);
+    </script>
+</body>
+</html>
