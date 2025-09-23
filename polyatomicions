@@ -1,1 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polyatomic Ion Mastery Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .quiz-container {
+            max-width: 800px;
+            margin: auto;
+        }
+        .btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .correct {
+            background-color: #22c55e !important;
+            color: white !important;
+            border-color: #16a34a !important;
+        }
+        .incorrect {
+            background-color: #ef4444 !important;
+            color: white !important;
+            border-color: #dc2626 !important;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background-color: #4f46e5;
+            border-radius: 0.25rem;
+            transition: width 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <div id="quiz-app" class="quiz-container w-full">
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="text-center bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl">
+            <h1 class="text-4xl font-bold text-indigo-600 dark:text-indigo-400 mb-4">Polyatomic Ion Mastery Quiz</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-400 mb-8">Choose a section to begin your training.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                 <button onclick="startQuiz(1)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-lg text-lg btn">Section 1: Name from Formula</button>
+                 <button onclick="startQuiz(2)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-lg text-lg btn">Section 2: Formula from Name</button>
+                 <button onclick="startQuiz(3)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-lg text-lg btn">Section 3: State the Colour</button>
+                 <button onclick="startQuiz(4)" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-4 px-6 rounded-lg text-lg btn">Section 4: Name from Formula</button>
+                 <button onclick="startQuiz(5)" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-4 px-6 rounded-lg text-lg btn">Section 5: Formula from Name</button>
+                 <button onclick="startQuiz(6)" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-4 px-6 rounded-lg text-lg btn">Section 6: State the Colour</button>
+            </div>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-2xl shadow-xl">
+            <div class="flex justify-between items-center mb-4">
+                <div id="question-counter" class="text-sm font-semibold text-gray-500 dark:text-gray-400"></div>
+                <div id="score-counter" class="text-sm font-semibold text-indigo-500">Score: 0</div>
+            </div>
+            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-6">
+                <div id="progress-bar" class="progress-bar-fill" style="width: 0%"></div>
+            </div>
+            
+            <h2 id="question-text" class="text-2xl font-semibold mb-6 min-h-[6rem]"></h2>
+            
+            <div id="answer-options" class="space-y-4">
+                <!-- Options will be injected here -->
+            </div>
+            
+            <div id="feedback" class="mt-6 text-center font-semibold"></div>
+            <button id="next-btn" class="w-full mt-4 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg btn hidden">Next Question</button>
+            <button id="back-to-menu-quiz" class="w-full mt-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-lg btn">Back to Menu</button>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-screen" class="hidden text-center bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl">
+            <h1 class="text-4xl font-bold mb-4">Section Complete!</h1>
+            <p class="text-2xl mb-2">Your Final Score:</p>
+            <p id="final-score" class="text-6xl font-extrabold text-indigo-500 mb-8"></p>
+            <p id="final-message" class="text-lg text-gray-600 dark:text-gray-400 mb-8"></p>
+            <button id="restart-btn" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-10 rounded-lg text-xl btn">Play Section Again</button>
+            <button id="back-to-menu-results" class="w-full sm:w-auto mt-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-4 px-10 rounded-lg text-xl btn">Back to Menu</button>
+        </div>
+
+    </div>
+
+    <script>
+        const quizData = [
+            // Section 1: Identify the Name (Given Formula)
+            { section: 1, type: 'mcq', question: 'What is the name of the ion with the formula NH₄⁺?', options: ['Nitride ion', 'Ammonia ion', 'Ammonium ion', 'Hydronium ion'], answer: 'Ammonium ion' },
+            { section: 1, type: 'mcq', question: 'What is the name of the ion with the formula OH⁻?', options: ['Oxygen hydride ion', 'Oxide ion', 'Hydroxide ion', 'Hydronium ion'], answer: 'Hydroxide ion' },
+            { section: 1, type: 'mcq', question: 'What is the name of the ion with the formula NO₃⁻?', options: ['Nitrite ion', 'Nitrate ion', 'Nitrogen oxide ion', 'Nitride ion'], answer: 'Nitrate ion' },
+            { section: 1, type: 'mcq', question: 'What is the name of the ion with the formula SO₄²⁻?', options: ['Sulphite ion', 'Sulphate ion', 'Thiosulphate ion', 'Sulphide ion'], answer: 'Sulphate ion' },
+            { section: 1, type: 'mcq', question: 'What is the name of the ion with the formula CO₃²⁻?', options: ['Carbon dioxide ion', 'Carbonate ion', 'Bicarbonate ion', 'Carbonyl ion'], answer: 'Carbonate ion' },
+            { section: 1, type: 'mcq', question: 'What is the name of the ion with the formula PO₄³⁻?', options: ['Phosphite ion', 'Phosphate ion', 'Phosphide ion', 'Phosphorus oxide ion'], answer: 'Phosphate ion' },
+            { section: 1, type: 'mcq', question: 'What is the name of the ion with the formula MnO₄⁻?', options: ['Manganate ion', 'Manganese oxide ion', 'Permanganate ion', 'Manganite ion'], answer: 'Permanganate ion' },
+            { section: 1, type: 'mcq', question: 'What is the name of the ion with the formula CrO₄²⁻?', options: ['Chromite ion', 'Chromium oxide ion', 'Chromate ion', 'Dichromate ion'], answer: 'Chromate ion' },
+            { section: 1, type: 'mcq', question: 'What is the name of the ion with the formula Cr₂O₇²⁻?', options: ['Chromate ion', 'Chromium(VI) oxide ion', 'Dichromate ion', 'Perchromate ion'], answer: 'Dichromate ion' },
+            { section: 1, type: 'mcq', question: 'What is the name of the ion with the formula NO₂⁻?', options: ['Nitrate ion', 'Nitrite ion', 'Nitrogen(II) oxide ion', 'Nitro ion'], answer: 'Nitrite ion' },
+            { section: 1, type: 'mcq', question: 'What is the name of the ion with the formula SO₃²⁻?', options: ['Sulphate ion', 'Sulphite ion', 'Bisulphite ion', 'Thiosulphate ion'], answer: 'Sulphite ion' },
+            { section: 1, type: 'mcq', question: 'What is the name of the ion with the formula HCO₃⁻?', options: ['Carbonate ion', 'Hydrogencarbonate ion', 'Carbonic acid ion', 'Carbocation'], answer: 'Hydrogencarbonate ion' },
+            { section: 1, type: 'mcq', question: 'What is the name of the ion with the formula CN⁻?', options: ['Cyanate ion', 'Thiocyanate ion', 'Isocyanide ion', 'Cyanide ion'], answer: 'Cyanide ion' },
+            { section: 1, type: 'mcq', question: 'What is the name of the ion with the formula ClO₃⁻?', options: ['Chlorite ion', 'Perchlorate ion', 'Hypochlorite ion', 'Chlorate ion'], answer: 'Chlorate ion' },
+            { section: 1, type: 'mcq', question: 'What is the name of the ion with the formula ClO⁻?', options: ['Chlorate ion', 'Chlorite ion', 'Hypochlorite ion', 'Perchlorate ion'], answer: 'Hypochlorite ion' },
+            { section: 1, type: 'mcq', question: 'What is the name of the ion with the formula HSO₄⁻?', options: ['Sulphite ion', 'Hydrogensulphate ion', 'Sulphuric ion', 'Thiosulphate ion'], answer: 'Hydrogensulphate ion' },
+            { section: 1, type: 'mcq', question: 'What is the name of the ion with the formula S₂O₃²⁻?', options: ['Sulphite ion', 'Sulphate ion', 'Thiosulphate ion', 'Disulphate ion'], answer: 'Thiosulphate ion' },
+            { section: 1, type: 'mcq', question: 'What is the name of the ion with the formula SiO₃²⁻?', options: ['Silicate ion', 'Silicon oxide ion', 'Metasilicate ion', 'Disilicate ion'], answer: 'Silicate ion' },
+            
+            // Section 2: Write the Formula (Given Name)
+            { section: 2, type: 'mcq', question: 'What is the formula for the hydroxide ion?', options: ['HO⁻', 'H₂O⁺', 'OH⁻', 'O²⁻'], answer: 'OH⁻' },
+            { section: 2, type: 'mcq', question: 'What is the formula for the ammonium ion?', options: ['NH₃⁺', 'N⁴⁻', 'NH₄⁺', '(NH₃)₂⁺'], answer: 'NH₄⁺' },
+            { section: 2, type: 'mcq', question: 'What is the formula for the carbonate ion?', options: ['CO₂²⁻', 'HCO₃⁻', 'C₂O₄²⁻', 'CO₃²⁻'], answer: 'CO₃²⁻' },
+            { section: 2, type: 'mcq', question: 'What is the formula for the phosphate ion?', options: ['P³⁻', 'PO₄³⁻', 'PO₃³⁻', '(PO₂)₂²⁻'], answer: 'PO₄³⁻' },
+            { section: 2, type: 'mcq', question: 'What is the formula for the nitrate ion?', options: ['NO₂⁻', 'NO₃²⁻', 'NO₃⁻', 'N₂O₃⁻'], answer: 'NO₃⁻' },
+            { section: 2, type: 'mcq', question: 'What is the formula for the sulphate ion?', options: ['S²⁻', 'SO₃²⁻', 'SO₄²⁻', 'S₂O₃²⁻'], answer: 'SO₄²⁻' },
+            { section: 2, type: 'mcq', question: 'What is the formula for the permanganate ion?', options: ['MnO₄²⁻', 'MnO₄⁻', 'MnO₂⁻', '(MnO)₂⁻'], answer: 'MnO₄⁻' },
+            { section: 2, type: 'mcq', question: 'What is the formula for the chromate ion?', options: ['Cr₂O₇²⁻', 'CrO₂²⁻', 'CrO₄²⁻', 'CrO³⁻'], answer: 'CrO₄²⁻' },
+            { section: 2, type: 'mcq', question: 'What is the formula for the dichromate ion?', options: ['CrO₄²⁻', 'Cr₂O₄²⁻', 'Cr₂O₇²⁻', 'CrO₃²⁻'], answer: 'Cr₂O₇²⁻' },
+            { section: 2, type: 'mcq', question: 'What is the formula for the nitrite ion?', options: ['NO₃⁻', 'N₂O₄⁻', 'NO₂⁻', 'N²⁻'], answer: 'NO₂⁻' },
+            { section: 2, type: 'mcq', question: 'What is the formula for the sulphite ion?', options: ['S²⁻', 'SO₄²⁻', 'SO₃²⁻', 'HSO₃⁻'], answer: 'SO₃²⁻' },
+            { section: 2, type: 'mcq', question: 'What is the formula for the hydrogencarbonate ion?', options: ['CO₃²⁻', 'H₂CO₃', 'HCO₃⁻', 'H₂C₂O₄⁻'], answer: 'HCO₃⁻' },
+            { section: 2, type: 'mcq', question: 'What is the formula for the cyanide ion?', options: ['CNO⁻', 'CN⁻', 'SCN⁻', 'C²⁻'], answer: 'CN⁻' },
+            { section: 2, type: 'mcq', question: 'What is the formula for the chlorate ion?', options: ['Cl⁻', 'ClO₂⁻', 'ClO₃⁻', 'ClO₄⁻'], answer: 'ClO₃⁻' },
+            { section: 2, type: 'mcq', question: 'What is the formula for the hypochlorite ion?', options: ['ClO⁻', 'ClO₂⁻', 'HClO⁻', 'OCl⁻'], answer: 'ClO⁻' },
+            { section: 2, type: 'mcq', question: 'What is the formula for the hydrogensulphate ion?', options: ['SO₄²⁻', 'H₂SO₄', 'HSO₄⁻', 'HS⁻'], answer: 'HSO₄⁻' },
+            { section: 2, type: 'mcq', question: 'What is the formula for the thiosulphate ion?', options: ['SO₄²⁻', 'S₂O₃²⁻', 'SO₃²⁻', 'S₂O₄²⁻'], answer: 'S₂O₃²⁻' },
+            { section: 2, type: 'mcq', question: 'What is the formula for the silicate ion?', options: ['SiO₂²⁻', 'Si⁴⁻', 'SiO₃²⁻', 'SiO₄⁴⁻'], answer: 'SiO₃²⁻' },
+            
+            // Section 3: State the Colour
+            { section: 3, type: 'mcq', question: 'What colour is the permanganate ion (MnO₄⁻) in aqueous solution?', options: ['Yellow', 'Orange', 'Purple', 'Green'], answer: 'Purple' },
+            { section: 3, type: 'mcq', question: 'What colour is the chromate ion (CrO₄²⁻) in aqueous solution?', options: ['Orange', 'Yellow', 'Green', 'Blue'], answer: 'Yellow' },
+            { section: 3, type: 'mcq', question: 'What colour is the dichromate ion (Cr₂O₇²⁻) in aqueous solution?', options: ['Yellow', 'Purple', 'Orange', 'Colourless'], answer: 'Orange' },
+            { section: 3, type: 'mcq', question: 'Is the ammonium ion (NH₄⁺) coloured or colourless in aqueous solution?', options: ['Green', 'Purple', 'Yellow', 'Colourless'], answer: 'Colourless' },
+            { section: 3, type: 'mcq', question: 'Is the hydroxide ion (OH⁻) coloured or colourless in aqueous solution?', options: ['Blue', 'Orange', 'Colourless', 'Pink'], answer: 'Colourless' },
+            { section: 3, type: 'mcq', question: 'Is the nitrate ion (NO₃⁻) coloured or colourless in aqueous solution?', options: ['Yellow', 'Colourless', 'Brown', 'Red'], answer: 'Colourless' },
+            { section: 3, type: 'mcq', question: 'Is the nitrite ion (NO₂⁻) coloured or colourless in aqueous solution?', options: ['Blue', 'Purple', 'Orange', 'Colourless'], answer: 'Colourless' },
+            { section: 3, type: 'mcq', question: 'Is the hydrogencarbonate ion (HCO₃⁻) coloured or colourless in aqueous solution?', options: ['Green', 'Yellow', 'Colourless', 'Red'], answer: 'Colourless' },
+            { section: 3, type: 'mcq', question: 'Is the hydrogensulphate ion (HSO₄⁻) coloured or colourless in aqueous solution?', options: ['Colourless', 'Blue', 'Green', 'Purple'], answer: 'Colourless' },
+            { section: 3, type: 'mcq', question: 'Is the cyanide ion (CN⁻) coloured or colourless in aqueous solution?', options: ['Yellow', 'Colourless', 'Orange', 'Pink'], answer: 'Colourless' },
+            { section: 3, type: 'mcq', question: 'Is the chlorate ion (ClO₃⁻) coloured or colourless in aqueous solution?', options: ['Brown', 'Blue', 'Colourless', 'Green'], answer: 'Colourless' },
+            { section: 3, type: 'mcq', question: 'Is the hypochlorite ion (ClO⁻) coloured or colourless in aqueous solution?', options: ['Colourless', 'Yellow', 'Purple', 'Orange'], answer: 'Colourless' },
+            { section: 3, type: 'mcq', question: 'Is the sulphate ion (SO₄²⁻) coloured or colourless in aqueous solution?', options: ['Blue', 'Yellow', 'Colourless', 'Green'], answer: 'Colourless' },
+            { section: 3, type: 'mcq', question: 'Is the sulphite ion (SO₃²⁻) coloured or colourless in aqueous solution?', options: ['Green', 'Colourless', 'Orange', 'Purple'], answer: 'Colourless' },
+            { section: 3, type: 'mcq', question: 'Is the thiosulphate ion (S₂O₃²⁻) coloured or colourless in aqueous solution?', options: ['Purple', 'Yellow', 'Blue', 'Colourless'], answer: 'Colourless' },
+            { section: 3, type: 'mcq', question: 'Is the silicate ion (SiO₃²⁻) coloured or colourless in aqueous solution?', options: ['Colourless', 'Green', 'Red', 'Yellow'], answer: 'Colourless' },
+            { section: 3, type: 'mcq', question: 'Is the carbonate ion (CO₃²⁻) coloured or colourless in aqueous solution?', options: ['Orange', 'Blue', 'Colourless', 'Purple'], answer: 'Colourless' },
+            { section: 3, type: 'mcq', question: 'Is the phosphate ion (PO₄³⁻) coloured or colourless in aqueous solution?', options: ['Green', 'Colourless', 'Orange', 'Purple'], answer: 'Colourless' },
+            
+            // Section 4: Copied from original, spelling adjusted
+            { section: 4, type: 'mcq', question: 'NH₄⁺ is the:', options: ['Nitride ion', 'Ammonia ion', 'Ammonium ion', 'Hydronium ion'], answer: 'Ammonium ion' },
+            { section: 4, type: 'mcq', question: 'OH⁻ is the:', options: ['Oxygen hydride ion', 'Oxide ion', 'Hydroxide ion', 'Hydronium ion'], answer: 'Hydroxide ion' },
+            { section: 4, type: 'mcq', question: 'NO₃⁻ is the:', options: ['Nitrite ion', 'Nitrate ion', 'Nitrogen oxide ion', 'Nitride ion'], answer: 'Nitrate ion' },
+            { section: 4, type: 'mcq', question: 'SO₄²⁻ is the:', options: ['Sulphite ion', 'Sulphate ion', 'Thiosulphate ion', 'Sulphide ion'], answer: 'Sulphate ion' },
+            { section: 4, type: 'mcq', question: 'CO₃²⁻ is the:', options: ['Carbon dioxide ion', 'Carbonate ion', 'Bicarbonate ion', 'Carbonyl ion'], answer: 'Carbonate ion' },
+            { section: 4, type: 'mcq', question: 'PO₄³⁻ is the:', options: ['Phosphite ion', 'Phosphate ion', 'Phosphide ion', 'Phosphorus oxide ion'], answer: 'Phosphate ion' },
+            { section: 4, type: 'mcq', question: 'MnO₄⁻ is the:', options: ['Manganate ion', 'Manganese oxide ion', 'Permanganate ion', 'Manganite ion'], answer: 'Permanganate ion' },
+            { section: 4, type: 'mcq', question: 'CrO₄²⁻ is the:', options: ['Chromite ion', 'Chromium oxide ion', 'Chromate ion', 'Dichromate ion'], answer: 'Chromate ion' },
+            { section: 4, type: 'mcq', question: 'Cr₂O₇²⁻ is the:', options: ['Chromate ion', 'Chromium(VI) oxide ion', 'Dichromate ion', 'Perchromate ion'], answer: 'Dichromate ion' },
+            { section: 4, type: 'mcq', question: 'NO₂⁻ is the:', options: ['Nitrate ion', 'Nitrite ion', 'Nitrogen(II) oxide ion', 'Nitro ion'], answer: 'Nitrite ion' },
+            { section: 4, type: 'mcq', question: 'SO₃²⁻ is the:', options: ['Sulphate ion', 'Sulphite ion', 'Bisulphite ion', 'Thiosulphate ion'], answer: 'Sulphite ion' },
+            { section: 4, type: 'mcq', question: 'HCO₃⁻ is the:', options: ['Carbonate ion', 'Hydrogencarbonate ion', 'Carbonic acid ion', 'Bicarbonate ion'], answer: 'Hydrogencarbonate ion' },
+            { section: 4, type: 'mcq', question: 'CN⁻ is the:', options: ['Cyanate ion', 'Thiocyanate ion', 'Isocyanide ion', 'Cyanide ion'], answer: 'Cyanide ion' },
+            { section: 4, type: 'mcq', question: 'ClO₃⁻ is the:', options: ['Chlorite ion', 'Perchlorate ion', 'Hypochlorite ion', 'Chlorate ion'], answer: 'Chlorate ion' },
+            { section: 4, type: 'mcq', question: 'ClO⁻ is the:', options: ['Chlorate ion', 'Chlorite ion', 'Hypochlorite ion', 'Perchlorate ion'], answer: 'Hypochlorite ion' },
+            { section: 4, type: 'mcq', question: 'HSO₄⁻ is the:', options: ['Sulphite ion', 'Hydrogensulphate ion', 'Bisulphate ion', 'Thiosulphate ion'], answer: 'Hydrogensulphate ion' },
+            { section: 4, type: 'mcq', question: 'S₂O₃²⁻ is the:', options: ['Sulphite ion', 'Sulphate ion', 'Thiosulphate ion', 'Disulphate ion'], answer: 'Thiosulphate ion' },
+            { section: 4, type: 'mcq', question: 'SiO₃²⁻ is the:', options: ['Silicate ion', 'Silicon oxide ion', 'Metasilicate ion', 'Disilicate ion'], answer: 'Silicate ion' },
+           
+            // Section 5: Copied from original
+            { section: 5, type: 'mcq', question: 'The formula for the hydroxide ion is:', options: ['HO⁻', 'H₂O⁺', 'OH⁻', 'O²⁻'], answer: 'OH⁻' },
+            { section: 5, type: 'mcq', question: 'The formula for the ammonium ion is:', options: ['NH₃⁺', 'N⁴⁻', 'NH₄⁺', '(NH₃)₂⁺'], answer: 'NH₄⁺' },
+            { section: 5, type: 'mcq', question: 'The formula for the carbonate ion is:', options: ['CO₂²⁻', 'HCO₃⁻', 'C₂O₄²⁻', 'CO₃²⁻'], answer: 'CO₃²⁻' },
+            { section: 5, type: 'mcq', question: 'The formula for the phosphate ion is:', options: ['P³⁻', 'PO₄³⁻', 'PO₃³⁻', '(PO₂)₂²⁻'], answer: 'PO₄³⁻' },
+            { section: 5, type: 'mcq', question: 'The formula for the nitrate ion is:', options: ['NO₂⁻', 'NO₃²⁻', 'NO₃⁻', 'N₂O₃⁻'], answer: 'NO₃⁻' },
+            { section: 5, type: 'mcq', question: 'The formula for the sulphate ion is:', options: ['S²⁻', 'SO₃²⁻', 'SO₄²⁻', 'S₂O₃²⁻'], answer: 'SO₄²⁻' },
+            { section: 5, type: 'mcq', question: 'The formula for the permanganate ion is:', options: ['MnO₄²⁻', 'MnO₄⁻', 'MnO₂⁻', '(MnO)₂⁻'], answer: 'MnO₄⁻' },
+            { section: 5, type: 'mcq', question: 'The formula for the chromate ion is:', options: ['Cr₂O₇²⁻', 'CrO₂²⁻', 'CrO₄²⁻', 'CrO³⁻'], answer: 'CrO₄²⁻' },
+            { section: 5, type: 'mcq', question: 'The formula for the dichromate ion is:', options: ['CrO₄²⁻', 'Cr₂O₄²⁻', 'Cr₂O₇²⁻', 'CrO₃²⁻'], answer: 'Cr₂O₇²⁻' },
+            { section: 5, type: 'mcq', question: 'The formula for the nitrite ion is:', options: ['NO₃⁻', 'N₂O₄⁻', 'NO₂⁻', 'N²⁻'], answer: 'NO₂⁻' },
+            { section: 5, type: 'mcq', question: 'The formula for the sulphite ion is:', options: ['S²⁻', 'SO₄²⁻', 'SO₃²⁻', 'HSO₃⁻'], answer: 'SO₃²⁻' },
+            { section: 5, type: 'mcq', question: 'The formula for the hydrogencarbonate ion is:', options: ['CO₃²⁻', 'H₂CO₃', 'HCO₃⁻', 'H₂C₂O₄⁻'], answer: 'HCO₃⁻' },
+            { section: 5, type: 'mcq', question: 'The formula for the cyanide ion is:', options: ['CNO⁻', 'CN⁻', 'SCN⁻', 'C²⁻'], answer: 'CN⁻' },
+            { section: 5, type: 'mcq', question: 'The formula for the chlorate ion is:', options: ['Cl⁻', 'ClO₂⁻', 'ClO₃⁻', 'ClO₄⁻'], answer: 'ClO₃⁻' },
+            { section: 5, type: 'mcq', question: 'The formula for the hypochlorite ion is:', options: ['ClO⁻', 'ClO₂⁻', 'HClO⁻', 'OCl⁻'], answer: 'ClO⁻' },
+            { section: 5, type: 'mcq', question: 'The formula for the hydrogensulphate ion is:', options: ['SO₄²⁻', 'H₂SO₄', 'HSO₄⁻', 'HS⁻'], answer: 'HSO₄⁻' },
+            { section: 5, type: 'mcq', question: 'The formula for the thiosulphate ion is:', options: ['SO₄²⁻', 'S₂O₃²⁻', 'SO₃²⁻', 'S₂O₄²⁻'], answer: 'S₂O₃²⁻' },
+            { section: 5, type: 'mcq', question: 'The formula for the silicate ion is:', options: ['SiO₂²⁻', 'Si⁴⁻', 'SiO₃²⁻', 'SiO₄⁴⁻'], answer: 'SiO₃²⁻' },
+           
+            // Section 6: Copied from original, spelling adjusted
+            { section: 6, type: 'mcq', question: 'The permanganate ion (MnO₄⁻) in aqueous solution is:', options: ['Yellow', 'Orange', 'Purple', 'Green'], answer: 'Purple' },
+            { section: 6, type: 'mcq', question: 'The chromate ion (CrO₄²⁻) in aqueous solution is:', options: ['Orange', 'Yellow', 'Green', 'Blue'], answer: 'Yellow' },
+            { section: 6, type: 'mcq', question: 'The dichromate ion (Cr₂O₇²⁻) in aqueous solution is:', options: ['Yellow', 'Purple', 'Orange', 'Colourless'], answer: 'Orange' },
+            { section: 6, type: 'mcq', question: 'The ammonium ion (NH₄⁺) in aqueous solution is:', options: ['Green', 'Purple', 'Yellow', 'Colourless'], answer: 'Colourless' },
+            { section: 6, type: 'mcq', question: 'The hydroxide ion (OH⁻) in aqueous solution is:', options: ['Blue', 'Orange', 'Colourless', 'Pink'], answer: 'Colourless' },
+            { section: 6, type: 'mcq', question: 'The nitrate ion (NO₃⁻) in aqueous solution is:', options: ['Yellow', 'Colourless', 'Brown', 'Red'], answer: 'Colourless' },
+            { section: 6, type: 'mcq', question: 'Which of the following polyatomic ions is typically colourless in aqueous solution?', options: ['CrO₄²⁻', 'MnO₄⁻', 'CO₃²⁻', 'Cr₂O₇²⁻'], answer: 'CO₃²⁻' },
+            { section: 6, type: 'mcq', question: 'Which of the following polyatomic ions is purple in aqueous solution?', options: ['CrO₄²⁻', 'MnO₄⁻', 'NO₃⁻', 'OH⁻'], answer: 'MnO₄⁻' },
+            { section: 6, type: 'mcq', question: 'The sulphate ion (SO₄²⁻) in aqueous solution is:', options: ['Blue', 'Yellow', 'Colourless', 'Green'], answer: 'Colourless' },
+            { section: 6, type: 'mcq', question: 'The phosphate ion (PO₄³⁻) in aqueous solution is:', options: ['Green', 'Colourless', 'Orange', 'Purple'], answer: 'Colourless' }
+        ];
+
+        // --- DOM Elements ---
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultsScreen = document.getElementById('results-screen');
+        
+        const restartBtn = document.getElementById('restart-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const backToMenuQuizBtn = document.getElementById('back-to-menu-quiz');
+        const backToMenuResultsBtn = document.getElementById('back-to-menu-results');
+
+        const questionCounter = document.getElementById('question-counter');
+        const scoreCounter = document.getElementById('score-counter');
+        const progressBar = document.getElementById('progress-bar');
+        const questionText = document.getElementById('question-text');
+        const answerOptionsContainer = document.getElementById('answer-options');
+        
+        const finalScore = document.getElementById('final-score');
+        const finalMessage = document.getElementById('final-message');
+
+        // --- Quiz State ---
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let currentSection = 0;
+        let sectionQuestions = [];
+
+        // --- Functions ---
+        function startQuiz(section) {
+            currentSection = section;
+            sectionQuestions = quizData.filter(q => q.section === section);
+            currentQuestionIndex = 0;
+            score = 0;
+            
+            startScreen.classList.add('hidden');
+            resultsScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            nextBtn.classList.add('hidden');
+            
+            updateScore();
+            showQuestion();
+        }
+
+        function showQuestion() {
+            resetState();
+            const currentQuestion = sectionQuestions[currentQuestionIndex];
+            
+            questionCounter.textContent = `Question ${currentQuestionIndex + 1} / ${sectionQuestions.length}`;
+            progressBar.style.width = `${((currentQuestionIndex + 1) / sectionQuestions.length) * 100}%`;
+            questionText.innerHTML = currentQuestion.question;
+
+            currentQuestion.options.forEach(option => {
+                const button = document.createElement('button');
+                button.innerHTML = option;
+                button.classList.add('block', 'w-full', 'text-left', 'p-4', 'rounded-lg', 'border-2', 'border-gray-300', 'dark:border-gray-600', 'bg-white', 'dark:bg-gray-800', 'hover:bg-gray-100', 'dark:hover:bg-gray-700', 'btn');
+                button.addEventListener('click', () => selectAnswer(button, option));
+                answerOptionsContainer.appendChild(button);
+            });
+        }
+
+        function resetState() {
+            feedback.textContent = '';
+            nextBtn.classList.add('hidden');
+            while (answerOptionsContainer.firstChild) {
+                answerOptionsContainer.removeChild(answerOptionsContainer.firstChild);
+            }
+        }
+
+        function selectAnswer(button, selectedOption) {
+            const currentQuestion = sectionQuestions[currentQuestionIndex];
+            const correct = selectedOption === currentQuestion.answer;
+            
+            if (correct) {
+                score++;
+                feedback.textContent = "Correct!";
+                feedback.classList.add('text-green-500');
+                feedback.classList.remove('text-red-500');
+                button.classList.add('correct');
+            } else {
+                feedback.innerHTML = `Incorrect. The correct answer is: <br><strong>${currentQuestion.answer}</strong>`;
+                feedback.classList.add('text-red-500');
+                feedback.classList.remove('text-green-500');
+                button.classList.add('incorrect');
+                // Highlight correct answer
+                Array.from(answerOptionsContainer.children).forEach(btn => {
+                    if (btn.innerHTML === currentQuestion.answer) {
+                        btn.classList.add('correct');
+                    }
+                });
+            }
+
+            Array.from(answerOptionsContainer.children).forEach(btn => {
+                btn.disabled = true; // Disable all buttons
+            });
+
+            updateScore();
+            nextBtn.classList.remove('hidden');
+        }
+
+        function updateScore() {
+            scoreCounter.textContent = `Score: ${score}`;
+        }
+        
+        function showNextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < sectionQuestions.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            quizScreen.classList.add('hidden');
+            resultsScreen.classList.remove('hidden');
+            
+            const percentage = Math.round((score / sectionQuestions.length) * 100);
+            finalScore.textContent = `${percentage}%`;
+            
+            let message = '';
+            if (percentage === 100) {
+                message = "Perfect score! You're a true Polyatomic Ion Master!";
+            } else if (percentage >= 80) {
+                message = "Excellent job! You have a strong command of this section.";
+            } else if (percentage >= 60) {
+                message = "Good effort! A little more practice and you'll be an expert.";
+            } else {
+                message = "Keep practicing! Repetition is key to memorizing these ions.";
+            }
+            finalMessage.textContent = message;
+        }
+
+        function showMenu() {
+             quizScreen.classList.add('hidden');
+             resultsScreen.classList.add('hidden');
+             startScreen.classList.remove('hidden');
+        }
+
+        // --- Event Listeners ---
+        restartBtn.addEventListener('click', () => startQuiz(currentSection));
+        nextBtn.addEventListener('click', showNextQuestion);
+        backToMenuQuizBtn.addEventListener('click', showMenu);
+        backToMenuResultsBtn.addEventListener('click', showMenu);
+    </script>
+</body>
+</html>
+
+
 
