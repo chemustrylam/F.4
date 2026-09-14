@@ -85,7 +85,7 @@
             <!-- Control Buttons -->
             <div class="flex flex-wrap justify-center gap-2">
                 <button onclick="setMode('normal')" id="btn-normal" class="glass-panel hover:bg-slate-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors border border-blue-500 bg-blue-900/30 flex-1 min-w-[120px]">
-                    Base State
+                    Structure
                 </button>
                 <button onclick="setMode('battery')" id="btn-battery" class="glass-panel hover:bg-slate-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors border-transparent flex-1 min-w-[120px]">
                     Connect Battery
@@ -106,15 +106,15 @@
         </div>
 
         <!-- Information Panel -->
-        <div class="glass-panel rounded-xl p-6 flex flex-col h-full">
-            <h2 class="text-xl font-bold mb-4 text-emerald-400 border-b border-slate-600 pb-2">Properties Explained</h2>
+        <div class="glass-panel rounded-xl p-6 flex flex-col h-full overflow-hidden">
+            <h2 class="text-xl font-bold mb-4 text-emerald-400 border-b border-slate-600 pb-2 shrink-0">Properties Explained</h2>
             
-            <div id="info-content" class="text-slate-300 space-y-4 overflow-y-auto flex-grow text-sm md:text-base leading-relaxed">
-                <!-- Content dynamically injected here by JS -->
+            <div class="mb-4 pb-4 border-b border-slate-600 shrink-0" id="legend-container">
+                <!-- Legend dynamically injected here by JS -->
             </div>
 
-            <div class="mt-6 pt-4 border-t border-slate-600" id="legend-container">
-                <!-- Legend dynamically injected here by JS -->
+            <div id="info-content" class="text-slate-300 space-y-4 overflow-y-auto flex-grow text-sm md:text-base leading-relaxed">
+                <!-- Content dynamically injected here by JS -->
             </div>
         </div>
     </div>
@@ -132,7 +132,7 @@
                 name: 'Magnesium',
                 symbol: 'Mg',
                 ionSymbol: 'Mg²⁺',
-                latexIon: '$Mg^{2+}$',
+                displayIon: 'Mg²⁺',
                 electronsPerIon: 2,
                 meltingPoint: '650°C'
             },
@@ -141,7 +141,7 @@
                 name: 'Sodium',
                 symbol: 'Na',
                 ionSymbol: 'Na⁺',
-                latexIon: 'Na⁺',
+                displayIon: 'Na⁺',
                 electronsPerIon: 1,
                 meltingPoint: '98°C'
             },
@@ -149,8 +149,8 @@
                 type: 'ionic',
                 name: 'Sodium Chloride',
                 symbol: 'NaCl',
-                latexCation: 'Na⁺',
-                latexAnion: 'Cl-,
+                displayCation: 'Na⁺',
+                displayAnion: 'Cl⁻',
                 meltingPoint: '801°C'
             }
         };
@@ -163,7 +163,7 @@
                     normal: `
                         <h3 class="text-lg font-semibold text-white">Giant Ionic Lattice</h3>
                         <p><strong>Sodium Chloride (NaCl)</strong> forms a giant ionic structure.</p>
-                        <p>It consists of a regular, repeating three-dimensional arrangement of positive ${data.latexCation} ions and negative ${data.latexAnion} ions.</p>
+                        <p>It consists of a regular, repeating three-dimensional arrangement of positive ${data.displayCation} ions and negative ${data.displayAnion} ions.</p>
                         <p>The ions are held together by strong electrostatic forces of attraction between oppositely charged ions, known as <strong>ionic bonds</strong>.</p>
                     `,
                     battery: `
@@ -175,17 +175,17 @@
                     battery_molten: `
                         <h3 class="text-lg font-semibold text-white">Electrical Conductivity (Molten)</h3>
                         <p>When heated strongly until molten, the immense thermal energy overcomes the strong ionic bonds, breaking down the rigid lattice.</p>
-                        <p>The ${data.latexCation} and ${data.latexAnion} ions are now <strong>mobile</strong>. When a battery is connected, these mobile ions act as charge carriers. <strong>Cations (+) drift toward the negative terminal, and anions (-) drift toward the positive terminal</strong>, creating a specific directional flow of ions that conducts electricity.</p>
+                        <p>The ${data.displayCation} and ${data.displayAnion} ions are now <strong>mobile</strong>. When a battery is connected, these mobile ions act as charge carriers. <strong>Cations (+) drift toward the negative terminal, and anions (-) drift toward the positive terminal</strong>, creating a specific directional flow of ions that conducts electricity.</p>
                     `,
                     battery_aqueous: `
                         <h3 class="text-lg font-semibold text-white">Electrical Conductivity (Aqueous)</h3>
-                        <p>When dissolved in water, water molecules surround and separate the ions (hydration). Note the presence of $H_2O$ molecules and a few ionized water molecules ($H^+$ and $OH^-$).</p>
-                        <p>The hydrated ${data.latexCation} and ${data.latexAnion} ions become <strong>mobile</strong>. Just like in the molten state, these mobile ions carry electric charge: <strong>cations ($Na^+$, $H^+$) drift towards the negative terminal, while anions ($Cl^-$, $OH^-$) drift towards the positive terminal</strong>.</p>
+                        <p>When dissolved in water, water molecules surround and separate the ions (hydration). Note the presence of H₂O molecules and a few ionized water molecules (H⁺ and OH⁻).</p>
+                        <p>The hydrated ${data.displayCation} and ${data.displayAnion} ions become <strong>mobile</strong>. Just like in the molten state, these mobile ions carry electric charge: <strong>cations (Na⁺, H⁺) drift towards the negative terminal, while anions (Cl⁻, OH⁻) drift towards the positive terminal</strong>.</p>
                     `,
                     heat: `
                         <h3 class="text-lg font-semibold text-white">High Melting Point</h3>
-                        <p>When heat is applied, the ${data.latexCation} and ${data.latexAnion} ions vibrate more vigorously in their fixed positions.</p>
-                        <p>A massive amount of thermal energy is required to overcome the strong ionic bonds holding the giant lattice together. Consequently, NaCl has a very high melting point of <strong>${data.meltingPoint}</strong>.</p>
+                        <p>When heat is applied, the Na⁺ and Cl⁻ ions vibrate more vigorously in their fixed positions.</p>
+                        <p>A large amount of energy is required to overcome the strong ionic bonds between oppositely charged ions that are holding the giant lattice together. Consequently, NaCl has a very high melting point of <strong>801°C</strong>.</p>
                     `,
                     force: `
                         <h3 class="text-lg font-semibold text-white">Hard but Brittle</h3>
@@ -199,7 +199,7 @@
                 normal: `
                     <h3 class="text-lg font-semibold text-white">The "Sea of Electrons"</h3>
                     <p>Metals like ${data.name} form a <strong>giant metallic structure</strong>.</p>
-                    <p>Each ${data.name.toLowerCase()} atom loses its ${data.electronsPerIon} outermost electron(s) to become a stable ${data.latexIon} ion. These ions form a closely packed, regular 3D lattice.</p>
+                    <p>Each ${data.name.toLowerCase()} atom loses its ${data.electronsPerIon} outermost electron(s) to become a stable ${data.displayIon} ion. These ions form a closely packed, regular 3D lattice.</p>
                     <p>The lost electrons are <strong>delocalized</strong>—they are no longer attached to any specific atom. Instead, they move freely throughout the entire structure, forming a "sea of electrons".</p>
                     <p>The strong electrostatic attraction between the positive metal ions and the negative sea of electrons is called the <strong>metallic bond</strong>.</p>
                 `,
@@ -212,13 +212,13 @@
                 heat: `
                     <h3 class="text-lg font-semibold text-white">Heat Conduction & High Melting Point</h3>
                     <p><strong>Thermal Conductivity:</strong> When heat is applied, the positive ions vibrate more vigorously. Simultaneously, the free-moving delocalized electrons gain kinetic energy and move much faster, rapidly transferring thermal energy throughout the metal lattice.</p>
-                    <p><strong>High Melting Point:</strong> Despite the intense vibration, the metal remains solid for a long time. The strong electrostatic forces (metallic bonds) between the ${data.latexIon} ions and the sea of electrons require a massive amount of energy to break apart. For ${data.name}, this happens at ${data.meltingPoint}.</p>
+                    <p><strong>High Melting Point:</strong> Despite the intense vibration, the metal remains solid for a long time. The strong electrostatic forces (metallic bonds) between the ${data.displayIon} ions and the sea of electrons require a massive amount of energy to break apart. For ${data.name}, this happens at ${data.meltingPoint}.</p>
                 `,
                 force: `
                     <h3 class="text-lg font-semibold text-white">Malleability and Ductility</h3>
-                    <p>Metals can be hammered into sheets (<strong>malleable</strong>) or drawn into wires (<strong>ductile</strong>) without breaking.</p>
-                    <p>When a large directional force is applied, layers of positive metal ions slide over one another.</p>
-                    <p>Unlike ionic crystals that shatter, the metallic structure does not break because the non-directional "sea of electrons" instantly adapts to the new shape, maintaining the strong metallic bonds and keeping the ions glued together in their new positions.</p>
+                    <p>In metal, the attraction between metal ions and the delocalised electrons holds the particles together (metallic bond).</p>
+                    <p>Metallic bond is <strong>non-directional</strong>. Layers of metal ions can easily slide over each another when a force is applied.</p>
+                    <p>Their new positions are still held by the sea of electrons. ∴ metals have high ductility and malleability.</p>
                 `
             };
         }
@@ -784,19 +784,39 @@
                         <div class="w-8 h-8 rounded-full bg-blue-500/20 border-2 border-blue-400 flex items-center justify-center shadow-[0_0_8px_#3b82f6]">
                             <span class="text-blue-400 text-[10px] font-bold">${data.ionSymbol}</span>
                         </div>
-                    <div class="flex items-center gap-3 mb-2">
-                        <div class="w-8 h-8 rounded-full bg-green-500/20 border-2 border-green-400 flex items-center justify-center shadow-[0_0_8px_#4ade80]">
-                            <span class="text-green-400 text-[10px] font-bold">Cl⁻</span>
-                        </div>
-                        <span class="text-sm">Chloride Ion (${data.latexAnion})</span>
+                        <span class="text-sm">Metal Ion (${data.displayIon})</span>
                     </div>
-                    <div class="flex items-center gap-3" id="water-legend" style="display: none;">
-                        <div class="w-8 h-8 flex items-center justify-center relative">
-                            <div class="w-3 h-3 rounded-full bg-red-500 absolute"></div>
-                            <div class="w-1.5 h-1.5 rounded-full bg-white absolute top-1 right-1"></div>
-                            <div class="w-1.5 h-1.5 rounded-full bg-white absolute bottom-1 right-1"></div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center relative">
+                            <div class="w-2 h-2 rounded-full bg-pink-100 shadow-[0_0_6px_#f472b6]"></div>
                         </div>
-                        <span class="text-sm">Water ($H_2O$) & Ions ($H^+$, $OH^-$)</span>
+                        <span class="text-sm">Delocalized Electron (e⁻)</span>
+                    </div>
+                `;
+            } else if (data.type === 'ionic') {
+                legendContainer.innerHTML = `
+                    <h3 class="text-sm font-semibold text-slate-400 mb-2">Legend</h3>
+                    <div class="flex flex-wrap items-center gap-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-8 h-8 rounded-full bg-orange-500/20 border-2 border-orange-400 flex items-center justify-center shadow-[0_0_8px_#fb923c]">
+                                <span class="text-orange-400 text-[10px] font-bold">Na⁺</span>
+                            </div>
+                            <span class="text-sm">Sodium Ion (${data.displayCation})</span>
+                        </div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-8 h-8 rounded-full bg-green-500/20 border-2 border-green-400 flex items-center justify-center shadow-[0_0_8px_#4ade80]">
+                                <span class="text-green-400 text-[10px] font-bold">Cl⁻</span>
+                            </div>
+                            <span class="text-sm">Chloride Ion (${data.displayAnion})</span>
+                        </div>
+                        <div class="flex items-center w-full gap-2" id="water-legend" style="display: none;">
+                            <div class="w-8 h-8 flex items-center justify-center relative">
+                                <div class="w-3 h-3 rounded-full bg-red-500 absolute"></div>
+                                <div class="w-1.5 h-1.5 rounded-full bg-white absolute top-1 right-1"></div>
+                                <div class="w-1.5 h-1.5 rounded-full bg-white absolute bottom-1 right-1"></div>
+                            </div>
+                            <span class="text-sm">Water (H₂O) & Ions (H⁺, OH⁻)</span>
+                        </div>
                     </div>
                 `;
             }
@@ -838,7 +858,7 @@
                 btnMolten.style.display = 'none';
                 btnAqueous.style.display = 'none';
                 btnBattery.innerText = 'Connect Battery';
-                btnNormal.innerText = 'Base State';
+                btnNormal.innerText = 'Structure';
                 
                 // Fallback if currently in a mode not supported by metals
                 if (mode === 'battery_molten' || mode === 'battery_aqueous') {
