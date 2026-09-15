@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Giant Metallic Structure Simulation (Magnesium)</title>
+    <title>Giant Metallic & Ionic Structure Simulation</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
@@ -24,7 +23,7 @@
             position: relative;
             width: 100%;
             height: 100%;
-            min-height: 400px;
+            min-height: 450px;
             background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
             border-radius: 0.75rem;
             overflow: hidden;
@@ -35,6 +34,7 @@
             display: block;
             width: 100%;
             height: 100%;
+            touch-action: none;
         }
 
         .glass-panel {
@@ -43,34 +43,24 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* Custom scrollbar for info panel */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(15, 23, 42, 0.5);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(71, 85, 105, 0.8);
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(100, 116, 139, 1);
-        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
+        ::-webkit-scrollbar-thumb { background: rgba(71, 85, 105, 0.8); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 1); }
     </style>
 </head>
 <body class="p-4 md:p-8 flex flex-col items-center">
 
-    <div class="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-3 gap-6 flex-grow">
+    <div class="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-3 gap-6 flex-grow">
         
         <!-- Main Canvas Area -->
         <div class="lg:col-span-2 flex flex-col gap-4">
             <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
+                    <h1 id="main-title" class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
                         Giant Metallic Structure
                     </h1>
-                    <p class="text-slate-400 mt-1" id="sub-title">Interactive simulation of Magnesium (Mg) at the microscopic level.</p>
+                    <p class="text-slate-400 mt-1" id="sub-title">Interactive simulation at the microscopic level.</p>
                 </div>
                 <div class="flex gap-1 bg-slate-800 p-1 rounded-lg border border-slate-700">
                     <button onclick="setSubstance('Mg')" id="btn-sub-mg" class="px-4 py-2 rounded bg-blue-600 text-white font-semibold text-sm transition-colors shadow-lg">Magnesium</button>
@@ -107,15 +97,15 @@
         </div>
 
         <!-- Information Panel -->
-        <div class="glass-panel rounded-xl p-6 flex flex-col h-full overflow-hidden">
+        <div class="glass-panel rounded-xl p-6 flex flex-col h-full overflow-hidden max-h-[800px]">
             <h2 class="text-xl font-bold mb-4 text-emerald-400 border-b border-slate-600 pb-2 shrink-0">Properties Explained</h2>
             
             <div class="mb-4 pb-4 border-b border-slate-600 shrink-0" id="legend-container">
-                <!-- Legend dynamically injected here by JS -->
+                <!-- Legend dynamically injected here -->
             </div>
 
-            <div id="info-content" class="text-slate-300 space-y-4 overflow-y-auto flex-grow text-sm md:text-base leading-relaxed">
-                <!-- Content dynamically injected here by JS -->
+            <div id="info-content" class="text-slate-300 space-y-4 overflow-y-auto flex-grow text-sm md:text-base leading-relaxed pr-2">
+                <!-- Content dynamically injected here -->
             </div>
         </div>
     </div>
@@ -128,41 +118,18 @@
         // Substance configuration
         let currentSubstance = 'Mg';
         const substanceData = {
-            'Mg': {
-                type: 'metal',
-                name: 'Magnesium',
-                symbol: 'Mg',
-                ionSymbol: 'Mg²⁺',
-                displayIon: 'Mg²⁺',
-                electronsPerIon: 2,
-                meltingPoint: '650°C'
-            },
-            'Na': {
-                type: 'metal',
-                name: 'Sodium',
-                symbol: 'Na',
-                ionSymbol: 'Na⁺',
-                displayIon: 'Na⁺',
-                electronsPerIon: 1,
-                meltingPoint: '98°C'
-            },
-            'NaCl': {
-                type: 'ionic',
-                name: 'Sodium Chloride',
-                symbol: 'NaCl',
-                displayCation: 'Na⁺',
-                displayAnion: 'Cl⁻',
-                meltingPoint: '801°C'
-            }
+            'Mg': { type: 'metal', name: 'Magnesium', symbol: 'Mg', ionSymbol: 'Mg²⁺', displayIon: 'Mg²⁺', electronsPerIon: 2, meltingPoint: '650°C' },
+            'Na': { type: 'metal', name: 'Sodium', symbol: 'Na', ionSymbol: 'Na⁺', displayIon: 'Na⁺', electronsPerIon: 1, meltingPoint: '98°C' },
+            'NaCl': { type: 'ionic', name: 'Sodium Chloride', symbol: 'NaCl', displayCation: 'Na⁺', displayAnion: 'Cl⁻', meltingPoint: '801°C' }
         };
 
-        // Text content for different modes
+        // Text content aligned exactly to user instructions and HKDSE syllabus
         function getInfoTexts() {
             const data = substanceData[currentSubstance];
             if (data.type === 'ionic') {
                 return {
                     normal: `
-                        <h3 class="text-lg font-semibold text-white">Giant Ionic Lattice</h3>
+                        <h3 class="text-lg font-semibold text-white">Giant Ionic Structure</h3>
                         <p><strong>Sodium Chloride (NaCl)</strong> forms a giant ionic structure.</p>
                         <p>It consists of a regular, repeating three-dimensional arrangement of positive ${data.displayCation} ions and negative ${data.displayAnion} ions.</p>
                         <p>The ions are held together by strong electrostatic forces of attraction between oppositely charged ions, known as <strong>ionic bonds</strong>.</p>
@@ -170,65 +137,59 @@
                     battery: `
                         <h3 class="text-lg font-semibold text-white">Electrical Conductivity (Solid)</h3>
                         <p>In the solid state, ionic compounds like NaCl <strong>do not conduct electricity</strong>.</p>
-                        <p>The ions are held tightly in fixed positions within the giant lattice by strong ionic bonds. Because there are no mobile charge carriers (no delocalized electrons and ions cannot move freely), current cannot flow.</p>
-                        <p><em>(Note: They do conduct when molten or dissolved in water, as the ions become free to move.)</em></p>
+                        <p>The ${data.displayCation} and ${data.displayAnion} ions are held tightly in fixed positions within the giant lattice by strong ionic bonds. There are no mobile ions to conduct electricity.</p>
                     `,
                     battery_molten: `
                         <h3 class="text-lg font-semibold text-white">Electrical Conductivity (Molten)</h3>
                         <p>When heated strongly until molten, the immense thermal energy overcomes the strong ionic bonds, breaking down the rigid lattice.</p>
-                        <p>The ${data.displayCation} and ${data.displayAnion} ions are now <strong>mobile</strong>. When a battery is connected, these mobile ions act as charge carriers. <strong>Cations (+) drift toward the negative terminal, and anions (-) drift toward the positive terminal</strong>, creating a specific directional flow of ions that conducts electricity.</p>
+                        <p>The ${data.displayCation} and ${data.displayAnion} ions are now <strong>mobile</strong>. When a battery is connected, cations (+) drift toward the negative terminal, and anions (-) drift toward the positive terminal, creating a current.</p>
                     `,
                     battery_aqueous: `
                         <h3 class="text-lg font-semibold text-white">Electrical Conductivity (Aqueous)</h3>
-                        <p>When dissolved in water, water molecules surround and separate the ions (hydration). Note the presence of H₂O molecules and a few ionized water molecules (H⁺ and OH⁻).</p>
-                        <p>The hydrated ${data.displayCation} and ${data.displayAnion} ions become <strong>mobile</strong>. Just like in the molten state, these mobile ions carry electric charge: <strong>cations (Na⁺, H⁺) drift towards the negative terminal, while anions (Cl⁻, OH⁻) drift towards the positive terminal</strong>.</p>
+                        <p>When dissolved in water, the lattice is broken down by water molecules.</p>
+                        <p>The hydrated ${data.displayCation} and ${data.displayAnion} ions become <strong>mobile</strong>. Just like in the molten state, these mobile ions carry electric charge: cations drift towards the negative terminal, while anions drift towards the positive terminal.</p>
                     `,
                     heat: `
                         <h3 class="text-lg font-semibold text-white">High Melting Point</h3>
-                        <p>When heat is applied, the Na⁺ and Cl⁻ ions vibrate more vigorously in their fixed positions.</p>
+                        <p><strong>Heating:</strong> When heat is applied, the ${data.displayCation} and ${data.displayAnion} ions vibrate more vigorously in their fixed positions.</p>
                         <p>A large amount of energy is required to overcome the strong ionic bonds between oppositely charged ions that are holding the giant lattice together. Consequently, NaCl has a very high melting point of <strong>801°C</strong>.</p>
                     `,
                     force: `
                         <h3 class="text-lg font-semibold text-white">Hard but Brittle</h3>
-                        <p>Ionic compounds are hard due to strong ionic bonds, but they are very <strong>brittle</strong>.</p>
-                        <p>When a large enough force is applied, layers of ions slide over one another. This brings ions of the <strong>same charge</strong> next to each other (e.g., positive next to positive).</p>
-                        <p>The resulting strong electrostatic repulsion causes the crystal lattice to shatter or cleave along planes.</p>
+                        <p>Ionic compounds are hard due to strong ionic bonds, but they are very brittle.</p>
+                        <p>When force is applied, layers of ions shift. As ions of the same charge align with each other, electrostatic repulsion breaks the lattice apart.</p>
                     `
                 };
             }
             return {
                 normal: `
-                    <h3 class="text-lg font-semibold text-white">The "Sea of Electrons"</h3>
+                    <h3 class="text-lg font-semibold text-white">Giant Metallic Structure</h3>
                     <p>Metals like ${data.name} form a <strong>giant metallic structure</strong>.</p>
-                    <p>Each ${data.name.toLowerCase()} atom loses its ${data.electronsPerIon} outermost electron(s) to become a stable ${data.displayIon} ion. These ions form a closely packed, regular 3D lattice.</p>
-                    <p>The lost electrons are <strong>delocalized</strong>—they are no longer attached to any specific atom. Instead, they move freely throughout the entire structure, forming a "sea of electrons".</p>
+                    <p>Metal cations (${data.displayIon}) are arranged in a regular lattice, surrounded by a "sea" of delocalised electrons that move freely near the metal ions throughout the structure.</p>
                     <p>The strong electrostatic attraction between the positive metal ions and the negative sea of electrons is called the <strong>metallic bond</strong>.</p>
                 `,
                 battery: `
                     <h3 class="text-lg font-semibold text-white">Good Conductors of Electricity</h3>
-                    <p>Under normal conditions, delocalized electrons move randomly in all directions, resulting in no net flow of charge.</p>
-                    <p>When connected to a battery, an electric field is created. The negative terminal repels the electrons, and the positive terminal attracts them.</p>
-                    <p>The "sea of electrons" acts as mobile charge carriers, shifting collectively towards the positive terminal. This directional flow of electrons constitutes an <strong>electric current</strong>.</p>
+                    <p>When connected to a battery, an electric field is created.</p>
+                    <p>The "sea" of delocalised electrons acts as mobile charge carriers, drifting collectively towards the positive terminal. This directional flow of electrons constitutes an <strong>electric current</strong>.</p>
                 `,
                 heat: `
                     <h3 class="text-lg font-semibold text-white">Heat Conduction & High Melting Point</h3>
-                    <p><strong>Thermal Conductivity:</strong> When heat is applied, the positive ions vibrate more vigorously. Simultaneously, the free-moving delocalized electrons gain kinetic energy and move much faster, rapidly transferring thermal energy throughout the metal lattice.</p>
-                    <p><strong>High Melting Point:</strong> Despite the intense vibration, the metal remains solid for a long time. The strong electrostatic forces (metallic bonds) between the ${data.displayIon} ions and the sea of electrons require a massive amount of energy to break apart. For ${data.name}, this happens at ${data.meltingPoint}.</p>
+                    <p><strong>Heating:</strong> Thermal energy increases the kinetic energy and vibration of the particles.</p>
+                    <p>Because metallic bonds are strong, high melting points are typical for giant metallic structures. A massive amount of energy is required to break them apart.</p>
                 `,
                 force: `
                     <h3 class="text-lg font-semibold text-white">Malleability and Ductility</h3>
                     <p>In metal, the attraction between metal ions and the delocalised electrons holds the particles together (metallic bond).</p>
-                    <p>Metallic bond is <strong>non-directional</strong>. Layers of metal ions can easily slide over each another when a force is applied.</p>
-                    <p>Their new positions are still held by the sea of electrons. ∴ metals have high ductility and malleability.</p>
+                    <p>Metallic bond is <strong>non-directional</strong>. Layers of metal ions can easily slide over each another and their new positions are still held by sea of electrons. ∴ metals have high ductility.</p>
                 `
             };
         }
 
-        // State management
         let mode = 'normal'; // 'normal', 'battery', 'heat', 'force'
         let ions = [];
         let electrons = [];
-        let solventParticles = []; // For water molecules and water ions
+        let solventParticles = [];
         let animationFrameId;
 
         // Simulation parameters
@@ -239,6 +200,9 @@
         let spacingY = 0;
         let offsetX = 0;
         let offsetY = 0;
+        
+        // Boundaries to keep electrons near the lattice
+        let latticeBounds = { minX: 0, maxX: 0, minY: 0, maxY: 0 };
 
         class Ion {
             constructor(row, col, isAnion = false) {
@@ -252,12 +216,10 @@
                 this.mobile = false;
                 this.vx = 0;
                 this.vy = 0;
-                this.shiftX = 0; // For malleability
+                this.shiftX = 0; 
                 this.targetShiftX = 0;
-                this.phase = Math.random() * Math.PI * 2; // For vibration
+                this.phase = Math.random() * Math.PI * 2; 
                 this.fractured = false;
-                this.fractureVelocityX = 0;
-                this.fractureVelocityY = 0;
                 this.fractureOffsetX = 0;
                 this.fractureOffsetY = 0;
             }
@@ -268,33 +230,25 @@
             }
 
             update(dt) {
-                // Determine vibration amplitude based on mode
-                let amplitude = mode === 'heat' ? 4.0 : 0.8;
-                let freq = mode === 'heat' ? 0.02 : 0.005;
+                let amplitude = mode === 'heat' ? 5.0 : 0.8;
+                let freq = mode === 'heat' ? 0.03 : 0.005;
                 const isIonic = substanceData[currentSubstance].type === 'ionic';
                 const isMoltenOrAqueous = isIonic && (mode === 'battery_molten' || mode === 'battery_aqueous');
 
+                // Fluid physics for Molten/Aqueous
                 if (isMoltenOrAqueous) {
                     if (!this.mobile) {
                         this.mobile = true;
-                        // Random initial velocity when lattice breaks
                         this.vx = (Math.random() - 0.5) * 4;
                         this.vy = (Math.random() - 0.5) * 4;
                     }
-
-                    // Apply electric field drift
                     let driftSpeed = mode === 'battery_aqueous' ? 0.15 : 0.1;
-                    if (this.isAnion) {
-                        this.vx += driftSpeed; // Cl- to positive (right) terminal
-                    } else {
-                        this.vx -= driftSpeed; // Na+ to negative (left) terminal
-                    }
+                    if (this.isAnion) this.vx += driftSpeed; 
+                    else this.vx -= driftSpeed; 
 
-                    // Brownian motion / random collisions
                     this.vx += (Math.random() - 0.5) * 1.5;
                     this.vy += (Math.random() - 0.5) * 1.5;
 
-                    // Speed limit
                     let maxSpeed = mode === 'battery_aqueous' ? 4 : 3;
                     let speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
                     if (speed > maxSpeed) {
@@ -302,71 +256,60 @@
                         this.vy = (this.vy / speed) * maxSpeed;
                     }
 
-                    this.x += this.vx;
-                    this.y += this.vy;
-
-                    // Wrap around boundaries
+                    this.x += this.vx; this.y += this.vy;
                     if (this.x > canvas.width + 20) this.x = -20;
                     if (this.x < -20) this.x = canvas.width + 20;
                     if (this.y < 0) { this.y = 0; this.vy *= -1; }
                     if (this.y > canvas.height) { this.y = canvas.height; this.vy *= -1; }
-                    
-                    return; // Skip the rest of the solid-state logic
+                    return; 
                 }
 
+                // Return to solid state smoothly
                 if (this.mobile) {
-                    // Gently return to lattice position if mode switches back to solid
-                    this.vx *= 0.9;
-                    this.vy *= 0.9;
+                    this.vx *= 0.9; this.vy *= 0.9;
                     this.x += (this.baseX + this.shiftX - this.x) * 0.1;
                     this.y += (this.baseY - this.y) * 0.1;
-                    
-                    if (Math.abs(this.x - (this.baseX + this.shiftX)) < 1 && Math.abs(this.y - this.baseY) < 1) {
-                        this.mobile = false;
-                    }
+                    if (Math.abs(this.x - (this.baseX + this.shiftX)) < 1 && Math.abs(this.y - this.baseY) < 1) this.mobile = false;
                     return;
                 }
 
+                // Force physics (Sliding & Gentle Fracture)
                 if (mode !== 'force') {
                     this.targetShiftX = 0;
                     this.shiftX += (this.targetShiftX - this.shiftX) * 0.05;
                     this.fractured = false;
-                    this.fractureOffsetX = 0;
-                    this.fractureOffsetY = 0;
-                    this.fractureVelocityX = 0;
-                    this.fractureVelocityY = 0;
+                    this.fractureOffsetX += (0 - this.fractureOffsetX) * 0.1; 
+                    this.fractureOffsetY += (0 - this.fractureOffsetY) * 0.1;
                 } else {
-                    // Handle layer sliding for force application
                     if (this.row < 2) {
-                        this.targetShiftX = spacingX * (isIonic ? 1.0 : 0.8); 
+                        this.targetShiftX = spacingX; 
                         
-                        if (isIonic && Math.abs(this.shiftX - this.targetShiftX) < 5 && !this.fractured) {
-                            // In ionic structures, sliding brings like charges together causing fracture
+                        // When top layer slides over exactly 1 spacing in NaCl, charges align
+                        if (isIonic && Math.abs(this.shiftX - this.targetShiftX) < 1.5 && !this.fractured) {
                             this.fractured = true;
-                            // Randomize fracture trajectory slightly upward and right
-                            this.fractureVelocityX = 1 + Math.random();
-                            this.fractureVelocityY = -1 - Math.random();
                         }
                     } else {
                         this.targetShiftX = 0;
-                        if (isIonic && this.shiftX > 0 && Math.abs(this.shiftX - spacingX) < 5 && !this.fractured) {
-                             // Bottom layer might also repel slightly down
+                        if (isIonic && this.shiftX > 0 && Math.abs(ions[0].shiftX - spacingX) < 1.5 && !this.fractured) {
                              this.fractured = true;
-                             this.fractureVelocityX = Math.random() * 0.5;
-                             this.fractureVelocityY = 1 + Math.random();
                         }
                     }
                     
                     if (!this.fractured) {
                         this.shiftX += (this.targetShiftX - this.shiftX) * 0.05;
                     } else {
-                        // Apply continuous momentum after fracture
-                        this.fractureOffsetX += this.fractureVelocityX;
-                        this.fractureOffsetY += this.fractureVelocityY;
+                        // Gentle static break instead of flying away
+                        let breakGap = 12;
+                        if (this.row < 2) {
+                            this.fractureOffsetY += (-breakGap - this.fractureOffsetY) * 0.1; // Shift up slightly
+                            this.fractureOffsetX += (4 - this.fractureOffsetX) * 0.1; // Shift right slightly
+                        } else {
+                            this.fractureOffsetY += (breakGap - this.fractureOffsetY) * 0.1; // Shift down slightly
+                            this.fractureOffsetX += (-4 - this.fractureOffsetX) * 0.1; // Shift left slightly
+                        }
                     }
                 }
 
-                // Apply vibration, shift, and fracture offsets
                 this.x = this.baseX + this.shiftX + this.fractureOffsetX + Math.sin(Date.now() * freq + this.phase) * amplitude;
                 this.y = this.baseY + this.fractureOffsetY + Math.cos(Date.now() * freq + this.phase) * amplitude;
             }
@@ -374,403 +317,223 @@
             draw() {
                 const isIonic = substanceData[currentSubstance].type === 'ionic';
                 let currentRadius = ionRadius;
-                
                 ctx.beginPath();
                 
                 if (isIonic) {
                     if (this.isAnion) {
-                        // Chloride Ion (Anion) - larger, green
                         currentRadius = ionRadius * 1.1;
                         ctx.arc(this.x, this.y, currentRadius, 0, Math.PI * 2);
-                        ctx.shadowBlur = mode === 'heat' ? 20 : 10;
-                        ctx.shadowColor = mode === 'heat' ? '#4ade80' : '#22c55e';
+                        ctx.shadowBlur = mode === 'heat' ? 20 : 10; ctx.shadowColor = '#4ade80';
                         ctx.fillStyle = mode === 'heat' ? 'rgba(74, 222, 128, 0.3)' : 'rgba(74, 222, 128, 0.15)';
-                        ctx.fill();
-                        ctx.lineWidth = 2;
-                        ctx.strokeStyle = mode === 'heat' ? '#4ade80' : '#22c55e';
-                        ctx.stroke();
-                        
-                        ctx.shadowBlur = 0;
-                        ctx.fillStyle = mode === 'heat' ? '#bbf7d0' : '#4ade80';
-                        ctx.font = `bold ${currentRadius * 0.45}px Inter`;
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
+                        ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = '#22c55e'; ctx.stroke();
+                        ctx.shadowBlur = 0; ctx.fillStyle = '#4ade80';
+                        ctx.font = `bold ${currentRadius * 0.45}px Inter`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                         ctx.fillText('Cl⁻', this.x, this.y);
                     } else {
-                        // Sodium Ion (Cation) - smaller, orange
                         currentRadius = ionRadius * 0.8;
                         ctx.arc(this.x, this.y, currentRadius, 0, Math.PI * 2);
-                        ctx.shadowBlur = mode === 'heat' ? 20 : 10;
-                        ctx.shadowColor = mode === 'heat' ? '#fb923c' : '#f97316';
+                        ctx.shadowBlur = mode === 'heat' ? 20 : 10; ctx.shadowColor = '#fb923c';
                         ctx.fillStyle = mode === 'heat' ? 'rgba(251, 146, 60, 0.3)' : 'rgba(251, 146, 60, 0.15)';
-                        ctx.fill();
-                        ctx.lineWidth = 2;
-                        ctx.strokeStyle = mode === 'heat' ? '#fb923c' : '#f97316';
-                        ctx.stroke();
-                        
-                        ctx.shadowBlur = 0;
-                        ctx.fillStyle = mode === 'heat' ? '#fed7aa' : '#fb923c';
-                        ctx.font = `bold ${currentRadius * 0.45}px Inter`;
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
+                        ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = '#f97316'; ctx.stroke();
+                        ctx.shadowBlur = 0; ctx.fillStyle = '#fb923c';
+                        ctx.font = `bold ${currentRadius * 0.45}px Inter`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                         ctx.fillText('Na⁺', this.x, this.y);
                     }
                 } else {
-                    // Metal Ion
                     ctx.arc(this.x, this.y, ionRadius, 0, Math.PI * 2);
-                    ctx.shadowBlur = mode === 'heat' ? 20 : 10;
-                    ctx.shadowColor = mode === 'heat' ? '#f87171' : '#3b82f6';
-                    ctx.fillStyle = mode === 'heat' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(59, 130, 246, 0.2)';
-                    ctx.fill();
-                    ctx.lineWidth = 2;
-                    ctx.strokeStyle = mode === 'heat' ? '#ef4444' : '#3b82f6';
-                    ctx.stroke();
-
-                    ctx.shadowBlur = 0;
-                    ctx.fillStyle = mode === 'heat' ? '#fca5a5' : '#93c5fd';
-                    ctx.font = `bold ${ionRadius * 0.45}px Inter`;
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(substanceData[currentSubstance].ionSymbol, this.x, this.y);
+                    ctx.shadowBlur = mode === 'heat' ? 20 : 10; ctx.shadowColor = '#3b82f6';
+                    ctx.fillStyle = mode === 'heat' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.2)';
+                    ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = '#3b82f6'; ctx.stroke();
+                    ctx.shadowBlur = 0; ctx.fillStyle = '#93c5fd';
+                    ctx.font = `bold ${ionRadius * 0.45}px Inter`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillText(substanceData[currentSubstance].displayIon, this.x, this.y);
                 }
             }
         }
 
         class Electron {
             constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
+                // Spawn strictly inside the metal lattice bounding box
+                this.x = latticeBounds.minX + Math.random() * (latticeBounds.maxX - latticeBounds.minX);
+                this.y = latticeBounds.minY + Math.random() * (latticeBounds.maxY - latticeBounds.minY);
                 this.vx = (Math.random() - 0.5) * 4;
                 this.vy = (Math.random() - 0.5) * 4;
                 this.radius = 3;
             }
-
             update() {
                 let speedMultiplier = mode === 'heat' ? 2.5 : 1.0;
                 let maxSpeed = 3 * speedMultiplier;
+                this.vx += (Math.random() - 0.5) * 1.5; this.vy += (Math.random() - 0.5) * 1.5;
 
-                // Random walk / Brownian motion behavior
-                this.vx += (Math.random() - 0.5) * 1.5;
-                this.vy += (Math.random() - 0.5) * 1.5;
+                if (mode === 'battery') { this.vx += 0.8; maxSpeed = 5; }
 
-                // Apply electric field (drift velocity) if battery is connected
-                if (mode === 'battery') {
-                    this.vx += 0.8; // Constant force to the right
-                    maxSpeed = 5;   // Higher overall speed allowed
-                }
-
-                // Limit speed
                 let speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-                if (speed > maxSpeed) {
-                    this.vx = (this.vx / speed) * maxSpeed;
-                    this.vy = (this.vy / speed) * maxSpeed;
-                }
+                if (speed > maxSpeed) { this.vx = (this.vx / speed) * maxSpeed; this.vy = (this.vy / speed) * maxSpeed; }
 
-                // Update position
-                this.x += this.vx;
-                this.y += this.vy;
+                this.x += this.vx; this.y += this.vy;
 
-                // Boundary collision & wrapping
+                // Electrons must always stay near the metal ions (lattice bounds)
                 if (mode === 'battery') {
-                    // Wrap around to simulate continuous flow
+                    // Flow horizontally, but strictly constrain vertically to the lattice
                     if (this.x > canvas.width + 10) this.x = -10;
                     if (this.x < -10) this.x = canvas.width + 10;
-                    if (this.y < 0) { this.y = 0; this.vy *= -1; }
-                    if (this.y > canvas.height) { this.y = canvas.height; this.vy *= -1; }
+                    if (this.y < latticeBounds.minY) { this.y = latticeBounds.minY; this.vy *= -1; }
+                    if (this.y > latticeBounds.maxY) { this.y = latticeBounds.maxY; this.vy *= -1; }
                 } else {
-                    // Normal bouncing
-                    const margin = 20;
-                    if (this.x < margin) { this.x = margin; this.vx *= -1; }
-                    if (this.x > canvas.width - margin) { this.x = canvas.width - margin; this.vx *= -1; }
-                    if (this.y < margin) { this.y = margin; this.vy *= -1; }
-                    if (this.y > canvas.height - margin) { this.y = canvas.height - margin; this.vy *= -1; }
+                    // Bounce tightly within the lattice bounding box
+                    if (this.x < latticeBounds.minX) { this.x = latticeBounds.minX; this.vx *= -1; }
+                    if (this.x > latticeBounds.maxX) { this.x = latticeBounds.maxX; this.vx *= -1; }
+                    if (this.y < latticeBounds.minY) { this.y = latticeBounds.minY; this.vy *= -1; }
+                    if (this.y > latticeBounds.maxY) { this.y = latticeBounds.maxY; this.vy *= -1; }
                 }
             }
-
             draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                
-                ctx.shadowBlur = 8;
-                ctx.shadowColor = '#f472b6'; // Pinkish glow
-                ctx.fillStyle = '#fdf2f8';
-                ctx.fill();
-                
-                ctx.shadowBlur = 0;
-                
-                // Tiny minus sign
-                ctx.strokeStyle = '#000';
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(this.x - 1.5, this.y);
-                ctx.lineTo(this.x + 1.5, this.y);
-                ctx.stroke();
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.shadowBlur = 8; ctx.shadowColor = '#f472b6'; ctx.fillStyle = '#fdf2f8'; ctx.fill();
+                ctx.shadowBlur = 0; ctx.strokeStyle = '#000'; ctx.lineWidth = 1;
+                ctx.beginPath(); ctx.moveTo(this.x - 1.5, this.y); ctx.lineTo(this.x + 1.5, this.y); ctx.stroke();
             }
         }
 
         class SolventParticle {
             constructor(type) {
-                this.type = type; // 'H2O', 'H+', 'OH-'
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.vx = (Math.random() - 0.5) * 2;
-                this.vy = (Math.random() - 0.5) * 2;
-                this.angle = Math.random() * Math.PI * 2;
-                this.va = (Math.random() - 0.5) * 0.2;
+                this.type = type; 
+                this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 2; this.vy = (Math.random() - 0.5) * 2;
+                this.angle = Math.random() * Math.PI * 2; this.va = (Math.random() - 0.5) * 0.2;
             }
-
             update() {
                 if (mode === 'battery_aqueous') {
-                    // Drift towards specific electrodes
-                    if (this.type === 'H+') this.vx -= 0.15; // Positive ion to negative terminal (left)
-                    if (this.type === 'OH-') this.vx += 0.15; // Negative ion to positive terminal (right)
+                    if (this.type === 'H⁺') this.vx -= 0.15; 
+                    if (this.type === 'OH⁻') this.vx += 0.15; 
                 }
-
-                // Random Brownian motion
-                this.vx += (Math.random() - 0.5) * 0.8;
-                this.vy += (Math.random() - 0.5) * 0.8;
-
-                let maxSpeed = this.type === 'H2O' ? 1.5 : 3.0;
+                this.vx += (Math.random() - 0.5) * 0.8; this.vy += (Math.random() - 0.5) * 0.8;
+                let maxSpeed = this.type === 'H₂O' ? 1.5 : 3.0;
                 let speed = Math.hypot(this.vx, this.vy);
-                if (speed > maxSpeed) {
-                    this.vx = (this.vx / speed) * maxSpeed;
-                    this.vy = (this.vy / speed) * maxSpeed;
-                }
+                if (speed > maxSpeed) { this.vx = (this.vx / speed) * maxSpeed; this.vy = (this.vy / speed) * maxSpeed; }
 
-                this.x += this.vx;
-                this.y += this.vy;
-                this.angle += this.va;
-
-                // Wrap around boundaries
-                if (this.x > canvas.width + 15) this.x = -15;
-                if (this.x < -15) this.x = canvas.width + 15;
-                if (this.y > canvas.height + 15) this.y = -15;
-                if (this.y < -15) this.y = canvas.height + 15;
+                this.x += this.vx; this.y += this.vy; this.angle += this.va;
+                if (this.x > canvas.width + 15) this.x = -15; if (this.x < -15) this.x = canvas.width + 15;
+                if (this.y > canvas.height + 15) this.y = -15; if (this.y < -15) this.y = canvas.height + 15;
             }
-
             draw() {
-                ctx.save();
-                ctx.translate(this.x, this.y);
-                ctx.rotate(this.angle);
-
-                if (this.type === 'H2O') {
-                    // Oxygen
-                    ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(239, 68, 68, 0.8)'; ctx.fill();
-                    // Hydrogens
-                    ctx.beginPath(); ctx.arc(7, 5, 4, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(248, 250, 252, 0.9)'; ctx.fill();
-                    ctx.beginPath(); ctx.arc(7, -5, 4, 0, Math.PI * 2);
-                    ctx.fill();
-                } else if (this.type === 'H+') {
-                    ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(248, 250, 252, 0.9)'; ctx.fill();
-                    ctx.fillStyle = '#ef4444'; ctx.font = 'bold 10px Inter'; 
-                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                    ctx.fillText('+', 0, 0);
-                } else if (this.type === 'OH-') {
-                    // Oxygen
-                    ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(239, 68, 68, 0.8)'; ctx.fill();
-                    // Hydrogen
-                    ctx.beginPath(); ctx.arc(7, 0, 4, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(248, 250, 252, 0.9)'; ctx.fill();
-                    // Minus sign
-                    ctx.fillStyle = '#f8fafc'; ctx.font = 'bold 12px Inter'; 
-                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                    ctx.fillText('-', -2, 0);
+                ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.angle);
+                if (this.type === 'H₂O') {
+                    ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.fillStyle = 'rgba(239, 68, 68, 0.8)'; ctx.fill();
+                    ctx.beginPath(); ctx.arc(7, 5, 4, 0, Math.PI * 2); ctx.fillStyle = 'rgba(248, 250, 252, 0.9)'; ctx.fill();
+                    ctx.beginPath(); ctx.arc(7, -5, 4, 0, Math.PI * 2); ctx.fill();
+                } else if (this.type === 'H⁺') {
+                    ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI * 2); ctx.fillStyle = 'rgba(248, 250, 252, 0.9)'; ctx.fill();
+                    ctx.fillStyle = '#ef4444'; ctx.font = 'bold 10px Inter'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('+', 0, 0);
+                } else if (this.type === 'OH⁻') {
+                    ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.fillStyle = 'rgba(239, 68, 68, 0.8)'; ctx.fill();
+                    ctx.beginPath(); ctx.arc(7, 0, 4, 0, Math.PI * 2); ctx.fillStyle = 'rgba(248, 250, 252, 0.9)'; ctx.fill();
+                    ctx.fillStyle = '#f8fafc'; ctx.font = 'bold 12px Inter'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('-', -2, 0);
                 }
-
                 ctx.restore();
             }
         }
 
         function drawOverlays() {
-            // Battery terminals overlay
             if (mode === 'battery' || mode === 'battery_molten' || mode === 'battery_aqueous') {
-                ctx.fillStyle = 'rgba(239, 68, 68, 0.2)'; // Red for positive (right)
-                ctx.fillRect(canvas.width - 40, 0, 40, canvas.height);
-                ctx.fillStyle = 'rgba(59, 130, 246, 0.2)'; // Blue for negative (left)
-                ctx.fillRect(0, 0, 40, canvas.height);
-
-                ctx.fillStyle = 'white';
-                ctx.font = 'bold 24px Inter';
-                ctx.fillText('+', canvas.width - 20, canvas.height / 2);
-                ctx.fillText('-', 20, canvas.height / 2);
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.15)'; ctx.fillRect(canvas.width - 40, 0, 40, canvas.height);
+                ctx.fillStyle = 'rgba(59, 130, 246, 0.15)'; ctx.fillRect(0, 0, 40, canvas.height);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; ctx.font = 'bold 24px Inter';
+                ctx.fillText('+', canvas.width - 20, canvas.height / 2); ctx.fillText('-', 20, canvas.height / 2);
 
                 if (substanceData[currentSubstance].type === 'metal') {
-                    // Arrows to show electron flow direction
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-                    ctx.font = '24px Inter';
-                    for(let i=1; i<4; i++) {
-                        ctx.fillText('→', canvas.width/4 * i, 30);
-                        ctx.fillText('→', canvas.width/4 * i, canvas.height - 30);
-                    }
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'; ctx.font = '24px Inter';
+                    for(let i=1; i<4; i++) { ctx.fillText('→', canvas.width/4 * i, latticeBounds.minY - 10); ctx.fillText('→', canvas.width/4 * i, latticeBounds.maxY + 20); }
                 } else if (mode === 'battery') {
-                    // Message for non-conductive solid state
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-                    ctx.font = 'italic 16px Inter';
-                    ctx.textAlign = 'center';
-                    ctx.fillText('No movement in solid state', canvas.width / 2, 40);
-                } else if (mode === 'battery_molten' || mode === 'battery_aqueous') {
-                    // Message for conductive mobile states
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-                    ctx.font = 'italic 16px Inter';
-                    ctx.textAlign = 'center';
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'; ctx.font = 'italic 16px Inter'; ctx.textAlign = 'center'; ctx.fillText('No movement in solid state', canvas.width / 2, 40);
+                } else {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'; ctx.font = 'italic 16px Inter'; ctx.textAlign = 'center'; 
                     let stateTxt = mode === 'battery_molten' ? 'Molten State: Mobile ions conduct' : 'Aqueous State: Hydrated mobile ions conduct';
                     ctx.fillText(stateTxt, canvas.width / 2, 40);
                 }
             }
+            if (mode === 'battery_aqueous') { ctx.fillStyle = 'rgba(56, 189, 248, 0.1)'; ctx.fillRect(0, 0, canvas.width, canvas.height); } 
+            else if (mode === 'battery_molten') { ctx.fillStyle = 'rgba(249, 115, 22, 0.1)'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
 
-            // Draw aqueous/molten backgrounds
-            if (mode === 'battery_aqueous') {
-                 ctx.fillStyle = 'rgba(56, 189, 248, 0.1)';
-                 ctx.fillRect(0, 0, canvas.width, canvas.height);
-            } else if (mode === 'battery_molten') {
-                 ctx.fillStyle = 'rgba(249, 115, 22, 0.1)';
-                 ctx.fillRect(0, 0, canvas.width, canvas.height);
-            }
-
-            // Heat source overlay
             if (mode === 'heat') {
                 let gradient = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - 100);
-                gradient.addColorStop(0, 'rgba(239, 68, 68, 0.4)'); // Red
-                gradient.addColorStop(0.5, 'rgba(245, 158, 11, 0.2)'); // Amber
-                gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-                
-                ctx.fillStyle = gradient;
-                ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
-
-                // Animated flame base
+                gradient.addColorStop(0, 'rgba(239, 68, 68, 0.4)'); gradient.addColorStop(0.5, 'rgba(245, 158, 11, 0.2)'); gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = gradient; ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
                 ctx.fillStyle = 'rgba(239, 68, 68, 0.6)';
-                for(let i=0; i<canvas.width; i+=40) {
-                    let h = 10 + Math.random() * 20;
-                    ctx.fillRect(i, canvas.height - h, 30, h);
-                }
+                for(let i=0; i<canvas.width; i+=40) { let h = 10 + Math.random() * 20; ctx.fillRect(i, canvas.height - h, 30, h); }
             }
 
-            // Force overlay
             if (mode === 'force') {
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-                ctx.font = 'bold 24px Inter';
-                // Top arrow pushing right
-                ctx.fillText('Force ➔', 80, offsetY + spacingY/2);
-                // Bottom resisting / stationary
-                ctx.fillText('Fixed', 80, offsetY + spacingY * 2.5);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; ctx.font = 'bold 24px Inter';
+                ctx.fillText('Force ➔', 80, offsetY + spacingY/2); ctx.fillText('Fixed', 80, offsetY + spacingY * 2.5);
             }
         }
 
         function initSimulation() {
-            ions = [];
-            electrons = [];
-
-            // Calculate grid spacing based on canvas size
+            ions = []; electrons = [];
             spacingX = Math.min(canvas.width / (latticeCols + 1), 100);
             spacingY = Math.min(canvas.height / (latticeRows + 1), 100);
-            
             ionRadius = Math.min(spacingX, spacingY) * 0.3;
-
-            // Center the lattice
             offsetX = (canvas.width - (spacingX * (latticeCols - 1))) / 2;
             offsetY = (canvas.height - (spacingY * (latticeRows - 1))) / 2;
 
-            const isIonic = substanceData[currentSubstance].type === 'ionic';
+            // Calculate precise bounding box for the electrons so they stay near the metal lattice
+            const margin = ionRadius * 1.5;
+            latticeBounds.minX = offsetX - margin;
+            latticeBounds.maxX = offsetX + (latticeCols - 1) * spacingX + margin;
+            latticeBounds.minY = offsetY - margin;
+            latticeBounds.maxY = offsetY + (latticeRows - 1) * spacingY + margin;
 
-            // Create ions
+            const isIonic = substanceData[currentSubstance].type === 'ionic';
             for (let r = 0; r < latticeRows; r++) {
                 for (let c = 0; c < latticeCols; c++) {
-                    let isAnion = false;
-                    if (isIonic) {
-                        // Alternate anion/cation like a chessboard
-                        isAnion = (r + c) % 2 !== 0;
-                    }
+                    let isAnion = isIonic ? (r + c) % 2 !== 0 : false;
                     let ion = new Ion(r, c, isAnion);
-                    ion.updatePositions();
-                    ions.push(ion);
+                    ion.updatePositions(); ions.push(ion);
                 }
             }
-
-            // Create electrons based on selected metal (skip for ionic)
             if (!isIonic) {
-                let totalElectrons = latticeRows * latticeCols * substanceData[currentSubstance].electronsPerIon;
-                for (let i = 0; i < totalElectrons; i++) {
-                    electrons.push(new Electron());
-                }
+                // Strictly enforce the electron ratio based on the substance (e.g. 10 Mg2+ = 20 e-)
+                let totalIons = latticeRows * latticeCols;
+                let electronsPerIon = substanceData[currentSubstance].electronsPerIon;
+                let totalElectrons = totalIons * electronsPerIon;
+                for (let i = 0; i < totalElectrons; i++) electrons.push(new Electron());
             }
         }
 
         function resizeCanvas() {
             const rect = container.getBoundingClientRect();
-            canvas.width = rect.width;
-            canvas.height = rect.height;
-            
-            // Re-calculate positions without deleting instances
-            spacingX = Math.min(canvas.width / (latticeCols + 1), 100);
-            spacingY = Math.min(canvas.height / (latticeRows + 1), 100);
-            ionRadius = Math.min(spacingX, spacingY) * 0.3;
-            offsetX = (canvas.width - (spacingX * (latticeCols - 1))) / 2;
-            offsetY = (canvas.height - (spacingY * (latticeRows - 1))) / 2;
-
-            ions.forEach(ion => ion.updatePositions());
+            canvas.width = rect.width; canvas.height = rect.height;
+            initSimulation();
         }
 
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Draw underlying overlays (battery gradient, heat)
             drawOverlays();
-
-            solventParticles.forEach(particle => {
-                particle.update();
-                particle.draw();
-            });
-
-            // Update and draw ions
-            ions.forEach(ion => {
-                ion.update();
-                ion.draw();
-            });
-
-            // Update and draw electrons
-            electrons.forEach(electron => {
-                electron.update();
-                electron.draw();
-            });
-
+            solventParticles.forEach(particle => { particle.update(); particle.draw(); });
+            ions.forEach(ion => { ion.update(); ion.draw(); });
+            electrons.forEach(electron => { electron.update(); electron.draw(); });
             animationFrameId = requestAnimationFrame(animate);
         }
 
         function setMode(newMode) {
             mode = newMode;
-            
             if (mode === 'battery_aqueous') {
                 solventParticles = [];
-                for(let i=0; i<45; i++) solventParticles.push(new SolventParticle('H2O'));
-                for(let i=0; i<6; i++) solventParticles.push(new SolventParticle('H+'));
-                for(let i=0; i<6; i++) solventParticles.push(new SolventParticle('OH-'));
-            } else {
-                solventParticles = [];
-            }
+                for(let i=0; i<45; i++) solventParticles.push(new SolventParticle('H₂O'));
+                for(let i=0; i<6; i++) solventParticles.push(new SolventParticle('H⁺'));
+                for(let i=0; i<6; i++) solventParticles.push(new SolventParticle('OH⁻'));
+            } else { solventParticles = []; }
 
-            // Update info text
             document.getElementById('info-content').innerHTML = getInfoTexts()[mode];
-
-            // Update button styles
             const buttons = ['normal', 'battery', 'battery_molten', 'battery_aqueous', 'heat', 'force'];
             buttons.forEach(b => {
-                const btnId = `btn-${b.replace('_', '-')}`;
-                const btn = document.getElementById(btnId);
+                const btn = document.getElementById(`btn-${b.replace('_', '-')}`);
                 if (btn) {
-                    if (b === mode) {
-                        btn.classList.remove('border-transparent');
-                        btn.classList.add('border-blue-500', 'bg-blue-900/30');
-                    } else {
-                        btn.classList.add('border-transparent');
-                        btn.classList.remove('border-blue-500', 'bg-blue-900/30');
-                    }
+                    if (b === mode) { btn.classList.remove('border-transparent'); btn.classList.add('border-blue-500', 'bg-blue-900/30'); } 
+                    else { btn.classList.add('border-transparent'); btn.classList.remove('border-blue-500', 'bg-blue-900/30'); }
                 }
             });
-
             updateLegend();
         }
 
@@ -780,35 +543,33 @@
             
             if (data.type === 'metal') {
                 legendContainer.innerHTML = `
-                    <h3 class="text-sm font-semibold text-slate-400 mb-2">Legend</h3>
                     <div class="flex items-center gap-3 mb-2">
                         <div class="w-8 h-8 rounded-full bg-blue-500/20 border-2 border-blue-400 flex items-center justify-center shadow-[0_0_8px_#3b82f6]">
-                            <span class="text-blue-400 text-[10px] font-bold">${data.ionSymbol}</span>
+                            <span class="text-blue-400 text-[10px] font-bold">${data.displayIon}</span>
                         </div>
-                        <span class="text-sm">Metal Ion (${data.displayIon})</span>
+                        <span class="text-sm">Metal Cation</span>
                     </div>
                     <div class="flex items-center gap-3">
                         <div class="w-8 h-8 rounded-full flex items-center justify-center relative">
                             <div class="w-2 h-2 rounded-full bg-pink-100 shadow-[0_0_6px_#f472b6]"></div>
                         </div>
-                        <span class="text-sm">Delocalized Electron (e⁻)</span>
+                        <span class="text-sm">Delocalised Electron (e⁻)</span>
                     </div>
                 `;
-            } else if (data.type === 'ionic') {
+            } else {
                 legendContainer.innerHTML = `
-                    <h3 class="text-sm font-semibold text-slate-400 mb-2">Legend</h3>
                     <div class="flex flex-wrap items-center gap-4">
                         <div class="flex items-center gap-2 mb-2">
                             <div class="w-8 h-8 rounded-full bg-orange-500/20 border-2 border-orange-400 flex items-center justify-center shadow-[0_0_8px_#fb923c]">
                                 <span class="text-orange-400 text-[10px] font-bold">Na⁺</span>
                             </div>
-                            <span class="text-sm">Sodium Ion (${data.displayCation})</span>
+                            <span class="text-sm">Sodium Cation</span>
                         </div>
                         <div class="flex items-center gap-2 mb-2">
                             <div class="w-8 h-8 rounded-full bg-green-500/20 border-2 border-green-400 flex items-center justify-center shadow-[0_0_8px_#4ade80]">
                                 <span class="text-green-400 text-[10px] font-bold">Cl⁻</span>
                             </div>
-                            <span class="text-sm">Chloride Ion (${data.displayAnion})</span>
+                            <span class="text-sm">Chloride Anion</span>
                         </div>
                         <div class="flex items-center w-full gap-2" id="water-legend" style="display: none;">
                             <div class="w-8 h-8 flex items-center justify-center relative">
@@ -816,78 +577,39 @@
                                 <div class="w-1.5 h-1.5 rounded-full bg-white absolute top-1 right-1"></div>
                                 <div class="w-1.5 h-1.5 rounded-full bg-white absolute bottom-1 right-1"></div>
                             </div>
-                            <span class="text-sm">Water (H₂O) & Ions (H⁺, OH⁻)</span>
+                            <span class="text-sm">Water (H₂O) & Ions</span>
                         </div>
                     </div>
                 `;
             }
-
             const waterLegend = document.getElementById('water-legend');
-            if (waterLegend) {
-                waterLegend.style.display = mode === 'battery_aqueous' ? 'flex' : 'none';
-            }
+            if (waterLegend) waterLegend.style.display = mode === 'battery_aqueous' ? 'flex' : 'none';
         }
 
         function setSubstance(sub) {
             currentSubstance = sub;
-            
-            // Update UI buttons
-            const btnMg = document.getElementById('btn-sub-mg');
-            const btnNa = document.getElementById('btn-sub-na');
-            const btnNaCl = document.getElementById('btn-sub-nacl');
-            
-            btnMg.className = 'px-4 py-2 rounded hover:bg-slate-700 text-slate-300 font-semibold text-sm transition-colors';
-            btnNa.className = 'px-4 py-2 rounded hover:bg-slate-700 text-slate-300 font-semibold text-sm transition-colors';
-            btnNaCl.className = 'px-4 py-2 rounded hover:bg-slate-700 text-slate-300 font-semibold text-sm transition-colors';
-
-            if (sub === 'Mg') btnMg.className = 'px-4 py-2 rounded bg-blue-600 text-white font-semibold text-sm transition-colors shadow-lg';
-            if (sub === 'Na') btnNa.className = 'px-4 py-2 rounded bg-blue-600 text-white font-semibold text-sm transition-colors shadow-lg';
-            if (sub === 'NaCl') btnNaCl.className = 'px-4 py-2 rounded bg-blue-600 text-white font-semibold text-sm transition-colors shadow-lg';
+            ['mg', 'na', 'nacl'].forEach(id => {
+                const btn = document.getElementById(`btn-sub-${id}`);
+                btn.className = 'px-4 py-2 rounded hover:bg-slate-700 text-slate-300 font-semibold text-sm transition-colors';
+            });
+            document.getElementById(`btn-sub-${sub.toLowerCase()}`).className = 'px-4 py-2 rounded bg-blue-600 text-white font-semibold text-sm transition-colors shadow-lg';
             
             const isIonic = substanceData[sub].type === 'ionic';
-            const btnMolten = document.getElementById('btn-battery-molten');
-            const btnAqueous = document.getElementById('btn-battery-aqueous');
-            const btnBattery = document.getElementById('btn-battery');
-            const btnNormal = document.getElementById('btn-normal');
-
-            if (isIonic) {
-                btnMolten.style.display = 'block';
-                btnAqueous.style.display = 'block';
-                btnBattery.innerText = 'Battery (Solid)';
-                btnNormal.innerText = 'Solid State';
-            } else {
-                btnMolten.style.display = 'none';
-                btnAqueous.style.display = 'none';
-                btnBattery.innerText = 'Connect Battery';
-                btnNormal.innerText = 'Structure';
-                
-                // Fallback if currently in a mode not supported by metals
-                if (mode === 'battery_molten' || mode === 'battery_aqueous') {
-                    mode = 'normal';
-                }
-            }
-
-            // Update Title
-            const data = substanceData[sub];
-            document.getElementById('sub-title').innerHTML = `Interactive simulation of ${data.name} (${data.symbol}) at the microscopic level.`;
+            document.getElementById('btn-battery-molten').style.display = isIonic ? 'block' : 'none';
+            document.getElementById('btn-battery-aqueous').style.display = isIonic ? 'block' : 'none';
+            document.getElementById('btn-battery').innerText = isIonic ? 'Battery (Solid)' : 'Connect Battery';
             
-            updateLegend();
+            if (!isIonic && (mode === 'battery_molten' || mode === 'battery_aqueous')) mode = 'normal';
 
-            // Restart simulation with new properties
-            initSimulation();
-            setMode(mode); // refresh info text
+            const data = substanceData[sub];
+            document.getElementById('main-title').innerText = isIonic ? "Giant Ionic Structure" : "Giant Metallic Structure";
+            document.getElementById('sub-title').innerText = `Interactive simulation of ${data.name} (${data.symbol}) at the microscopic level.`;
+            
+            updateLegend(); initSimulation(); setMode(mode);
         }
 
-        // Initialize and handle resizing
         window.addEventListener('resize', resizeCanvas);
-        
-        // Start sequence
-        window.onload = function() {
-            resizeCanvas();
-            setSubstance('Mg'); // Sets initial substance, text, styles, and initializes simulation
-            animate();
-        };
-
+        window.onload = function() { resizeCanvas(); setSubstance('Mg'); animate(); };
     </script>
 </body>
 </html>
