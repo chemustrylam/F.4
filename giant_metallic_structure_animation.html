@@ -73,7 +73,6 @@
                 <canvas id="simulationCanvas"></canvas>
             </div>
             
-            <!-- Control Buttons -->
             <div class="flex flex-wrap justify-center gap-2">
                 <button onclick="setMode('normal')" id="btn-normal" class="glass-panel hover:bg-slate-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors border border-blue-500 bg-blue-900/30 flex-1 min-w-[120px]">
                     Structure
@@ -96,7 +95,6 @@
             </div>
         </div>
 
-        <!-- Information Panel -->
         <div class="glass-panel rounded-xl p-6 flex flex-col h-full overflow-hidden max-h-[800px]">
             <h2 class="text-xl font-bold mb-4 text-emerald-400 border-b border-slate-600 pb-2 shrink-0">Properties Explained</h2>
             
@@ -115,15 +113,14 @@
         const ctx = canvas.getContext('2d');
         const container = document.getElementById('canvas-container');
 
-        // Substance configuration
+        // Substance configuration strictly handling exact electron counts
         let currentSubstance = 'Mg';
         const substanceData = {
-            'Mg': { type: 'metal', name: 'Magnesium', symbol: 'Mg', ionSymbol: 'Mg²⁺', displayIon: 'Mg²⁺', electronsPerIon: 2, meltingPoint: '650°C' },
-            'Na': { type: 'metal', name: 'Sodium', symbol: 'Na', ionSymbol: 'Na⁺', displayIon: 'Na⁺', electronsPerIon: 1, meltingPoint: '98°C' },
+            'Mg': { type: 'metal', name: 'Magnesium', symbol: 'Mg', displayIon: 'Mg²⁺', electronsPerIon: 2, meltingPoint: '650°C' },
+            'Na': { type: 'metal', name: 'Sodium', symbol: 'Na', displayIon: 'Na⁺', electronsPerIon: 1, meltingPoint: '98°C' },
             'NaCl': { type: 'ionic', name: 'Sodium Chloride', symbol: 'NaCl', displayCation: 'Na⁺', displayAnion: 'Cl⁻', meltingPoint: '801°C' }
         };
 
-        // Text content aligned exactly to user instructions and HKDSE syllabus
         function getInfoTexts() {
             const data = substanceData[currentSubstance];
             if (data.type === 'ionic') {
@@ -142,12 +139,12 @@
                     battery_molten: `
                         <h3 class="text-lg font-semibold text-white">Electrical Conductivity (Molten)</h3>
                         <p>When heated strongly until molten, the immense thermal energy overcomes the strong ionic bonds, breaking down the rigid lattice.</p>
-                        <p>The ${data.displayCation} and ${data.displayAnion} ions are now <strong>mobile</strong>. When a battery is connected, cations (+) drift toward the negative terminal, and anions (-) drift toward the positive terminal, creating a current.</p>
+                        <p>The ${data.displayCation} and ${data.displayAnion} ions are now <strong>mobile</strong>. When a battery is connected, cations (+) drift toward the negative terminal, and anions (-) drift toward the positive terminal, creating a current. They collect at the electrodes.</p>
                     `,
                     battery_aqueous: `
                         <h3 class="text-lg font-semibold text-white">Electrical Conductivity (Aqueous)</h3>
                         <p>When dissolved in water, the lattice is broken down by water molecules.</p>
-                        <p>The hydrated ${data.displayCation} and ${data.displayAnion} ions become <strong>mobile</strong>. Just like in the molten state, these mobile ions carry electric charge: cations drift towards the negative terminal, while anions drift towards the positive terminal.</p>
+                        <p>The hydrated ${data.displayCation} and ${data.displayAnion} ions become <strong>mobile</strong>. Just like in the molten state, these mobile ions carry electric charge: cations drift towards the negative terminal, while anions drift towards the positive terminal within the electrolyte.</p>
                     `,
                     heat: `
                         <h3 class="text-lg font-semibold text-white">High Melting Point</h3>
@@ -171,7 +168,7 @@
                 battery: `
                     <h3 class="text-lg font-semibold text-white">Good Conductors of Electricity</h3>
                     <p>When connected to a battery, an electric field is created.</p>
-                    <p>The "sea" of delocalised electrons acts as mobile charge carriers, drifting collectively towards the positive terminal. This directional flow of electrons constitutes an <strong>electric current</strong>.</p>
+                    <p>The "sea" of delocalised electrons acts as mobile charge carriers, drifting collectively towards the positive terminal. They flow continuously through the external wire circuit, creating an <strong>electric current</strong>.</p>
                 `,
                 heat: `
                     <h3 class="text-lg font-semibold text-white">Heat Conduction & High Melting Point</h3>
@@ -192,7 +189,6 @@
         let solventParticles = [];
         let animationFrameId;
 
-        // Simulation parameters
         const latticeRows = 4;
         const latticeCols = 6;
         let ionRadius = 25;
@@ -201,7 +197,6 @@
         let offsetX = 0;
         let offsetY = 0;
         
-        // Boundaries to keep electrons near the lattice
         let latticeBounds = { minX: 0, maxX: 0, minY: 0, maxY: 0 };
 
         class Ion {
@@ -234,8 +229,9 @@
                 let freq = mode === 'heat' ? 0.03 : 0.005;
                 const isIonic = substanceData[currentSubstance].type === 'ionic';
                 const isMoltenOrAqueous = isIonic && (mode === 'battery_molten' || mode === 'battery_aqueous');
+                const currentRadius = this.isAnion ? ionRadius * 1.1 : ionRadius * 0.8;
 
-                // Fluid physics for Molten/Aqueous
+                // Fluid physics for Molten/Aqueous (Strict Electrode Boundaries)
                 if (isMoltenOrAqueous) {
                     if (!this.mobile) {
                         this.mobile = true;
@@ -243,6 +239,7 @@
                         this.vy = (Math.random() - 0.5) * 4;
                     }
                     let driftSpeed = mode === 'battery_aqueous' ? 0.15 : 0.1;
+                    // Anions (-) move right to (+), Cations (+) move left to (-)
                     if (this.isAnion) this.vx += driftSpeed; 
                     else this.vx -= driftSpeed; 
 
@@ -257,10 +254,19 @@
                     }
 
                     this.x += this.vx; this.y += this.vy;
-                    if (this.x > canvas.width + 20) this.x = -20;
-                    if (this.x < -20) this.x = canvas.width + 20;
-                    if (this.y < 0) { this.y = 0; this.vy *= -1; }
-                    if (this.y > canvas.height) { this.y = canvas.height; this.vy *= -1; }
+                    
+                    // Crucial: Ions DO NOT pass through electrodes (40px wide on edges)
+                    if (this.x < 40 + currentRadius) { 
+                        this.x = 40 + currentRadius; 
+                        this.vx *= -0.3; // Collect at the electrode
+                    }
+                    if (this.x > canvas.width - 40 - currentRadius) { 
+                        this.x = canvas.width - 40 - currentRadius; 
+                        this.vx *= -0.3; // Collect at the electrode
+                    }
+                    
+                    if (this.y < currentRadius) { this.y = currentRadius; this.vy *= -1; }
+                    if (this.y > canvas.height - currentRadius) { this.y = canvas.height - currentRadius; this.vy *= -1; }
                     return; 
                 }
 
@@ -298,14 +304,15 @@
                     if (!this.fractured) {
                         this.shiftX += (this.targetShiftX - this.shiftX) * 0.05;
                     } else {
-                        // Gentle static break instead of flying away
-                        let breakGap = 12;
+                        // Move further away to show significant repulsion and breaking
+                        let breakGapY = 25;
+                        let breakGapX = 12;
                         if (this.row < 2) {
-                            this.fractureOffsetY += (-breakGap - this.fractureOffsetY) * 0.1; // Shift up slightly
-                            this.fractureOffsetX += (4 - this.fractureOffsetX) * 0.1; // Shift right slightly
+                            this.fractureOffsetY += (-breakGapY - this.fractureOffsetY) * 0.1;
+                            this.fractureOffsetX += (breakGapX - this.fractureOffsetX) * 0.1;
                         } else {
-                            this.fractureOffsetY += (breakGap - this.fractureOffsetY) * 0.1; // Shift down slightly
-                            this.fractureOffsetX += (-4 - this.fractureOffsetX) * 0.1; // Shift left slightly
+                            this.fractureOffsetY += (breakGapY - this.fractureOffsetY) * 0.1;
+                            this.fractureOffsetX += (-breakGapX - this.fractureOffsetX) * 0.1;
                         }
                     }
                 }
@@ -372,9 +379,8 @@
 
                 this.x += this.vx; this.y += this.vy;
 
-                // Electrons must always stay near the metal ions (lattice bounds)
                 if (mode === 'battery') {
-                    // Flow horizontally, but strictly constrain vertically to the lattice
+                    // Electrons move through the wire, so they loop around the screen when they hit the electrode
                     if (this.x > canvas.width + 10) this.x = -10;
                     if (this.x < -10) this.x = canvas.width + 10;
                     if (this.y < latticeBounds.minY) { this.y = latticeBounds.minY; this.vy *= -1; }
@@ -398,7 +404,7 @@
         class SolventParticle {
             constructor(type) {
                 this.type = type; 
-                this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height;
+                this.x = 45 + Math.random() * (canvas.width - 90); this.y = Math.random() * canvas.height;
                 this.vx = (Math.random() - 0.5) * 2; this.vy = (Math.random() - 0.5) * 2;
                 this.angle = Math.random() * Math.PI * 2; this.va = (Math.random() - 0.5) * 0.2;
             }
@@ -413,8 +419,12 @@
                 if (speed > maxSpeed) { this.vx = (this.vx / speed) * maxSpeed; this.vy = (this.vy / speed) * maxSpeed; }
 
                 this.x += this.vx; this.y += this.vy; this.angle += this.va;
-                if (this.x > canvas.width + 15) this.x = -15; if (this.x < -15) this.x = canvas.width + 15;
-                if (this.y > canvas.height + 15) this.y = -15; if (this.y < -15) this.y = canvas.height + 15;
+                
+                // Do not pass through electrodes
+                if (this.x > canvas.width - 45) { this.x = canvas.width - 45; this.vx *= -1; } 
+                if (this.x < 45) { this.x = 45; this.vx *= -1; }
+                if (this.y > canvas.height + 15) this.y = -15; 
+                if (this.y < -15) this.y = canvas.height + 15;
             }
             draw() {
                 ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.angle);
@@ -435,9 +445,12 @@
         }
 
         function drawOverlays() {
+            if (mode === 'battery_aqueous') { ctx.fillStyle = 'rgba(56, 189, 248, 0.1)'; ctx.fillRect(40, 0, canvas.width-80, canvas.height); } 
+            else if (mode === 'battery_molten') { ctx.fillStyle = 'rgba(249, 115, 22, 0.1)'; ctx.fillRect(40, 0, canvas.width-80, canvas.height); }
+
             if (mode === 'battery' || mode === 'battery_molten' || mode === 'battery_aqueous') {
-                ctx.fillStyle = 'rgba(239, 68, 68, 0.15)'; ctx.fillRect(canvas.width - 40, 0, 40, canvas.height);
-                ctx.fillStyle = 'rgba(59, 130, 246, 0.15)'; ctx.fillRect(0, 0, 40, canvas.height);
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.15)'; ctx.fillRect(canvas.width - 40, 0, 40, canvas.height); // Positive Right
+                ctx.fillStyle = 'rgba(59, 130, 246, 0.15)'; ctx.fillRect(0, 0, 40, canvas.height); // Negative Left
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; ctx.font = 'bold 24px Inter';
                 ctx.fillText('+', canvas.width - 20, canvas.height / 2); ctx.fillText('-', 20, canvas.height / 2);
 
@@ -445,15 +458,85 @@
                     ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'; ctx.font = '24px Inter';
                     for(let i=1; i<4; i++) { ctx.fillText('→', canvas.width/4 * i, latticeBounds.minY - 10); ctx.fillText('→', canvas.width/4 * i, latticeBounds.maxY + 20); }
                 } else if (mode === 'battery') {
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'; ctx.font = 'italic 16px Inter'; ctx.textAlign = 'center'; ctx.fillText('No movement in solid state', canvas.width / 2, 40);
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'; ctx.font = 'italic 16px Inter'; ctx.textAlign = 'center'; ctx.fillText('No movement in solid state', canvas.width / 2, 100);
                 } else {
                     ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'; ctx.font = 'italic 16px Inter'; ctx.textAlign = 'center'; 
                     let stateTxt = mode === 'battery_molten' ? 'Molten State: Mobile ions conduct' : 'Aqueous State: Hydrated mobile ions conduct';
-                    ctx.fillText(stateTxt, canvas.width / 2, 40);
+                    ctx.fillText(stateTxt, canvas.width / 2, 100);
                 }
+
+                let isConducting = false;
+                if (substanceData[currentSubstance].type === 'metal' && mode === 'battery') isConducting = true;
+                if (substanceData[currentSubstance].type === 'ionic' && (mode === 'battery_molten' || mode === 'battery_aqueous')) isConducting = true;
+
+                const bulbX = canvas.width / 2;
+                const bulbY = 50;
+
+                // Draw connecting wires from the electrodes
+                ctx.beginPath();
+                ctx.strokeStyle = '#64748b';
+                ctx.lineWidth = 2;
+                ctx.moveTo(20, 0); 
+                ctx.lineTo(20, 20);
+                ctx.lineTo(bulbX - 20, 20);
+                ctx.lineTo(bulbX - 10, bulbY);
+                ctx.moveTo(canvas.width - 20, 0);
+                ctx.lineTo(canvas.width - 20, 20);
+                ctx.lineTo(bulbX + 20, 20);
+                ctx.lineTo(bulbX + 10, bulbY);
+                ctx.stroke();
+
+                // Draw bulb base
+                ctx.fillStyle = '#475569';
+                ctx.fillRect(bulbX - 12, bulbY, 24, 12);
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(bulbX - 8, bulbY + 12, 16, 4);
+
+                // Draw bulb glass
+                ctx.beginPath();
+                ctx.arc(bulbX, bulbY - 12, 16, 0, Math.PI * 2);
+                
+                if (isConducting) {
+                    // Bright glowing state
+                    ctx.fillStyle = 'rgba(253, 224, 71, 0.9)';
+                    ctx.shadowBlur = 25;
+                    ctx.shadowColor = '#fef08a';
+                    ctx.fill();
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#eab308';
+                    ctx.stroke();
+                    
+                    // Draw light rays
+                    ctx.strokeStyle = 'rgba(253, 224, 71, 0.8)';
+                    ctx.lineWidth = 2;
+                    for(let i=0; i<8; i++) {
+                        let angle = (i * Math.PI) / 4;
+                        ctx.beginPath();
+                        ctx.moveTo(bulbX + Math.cos(angle) * 22, bulbY - 12 + Math.sin(angle) * 22);
+                        ctx.lineTo(bulbX + Math.cos(angle) * 32, bulbY - 12 + Math.sin(angle) * 32);
+                        ctx.stroke();
+                    }
+                } else {
+                    // Dull off state
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+                    ctx.shadowBlur = 0;
+                    ctx.fill();
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#64748b';
+                    ctx.stroke();
+                    
+                    // Draw internal filament
+                    ctx.beginPath();
+                    ctx.moveTo(bulbX - 6, bulbY - 2);
+                    ctx.lineTo(bulbX - 6, bulbY - 12);
+                    ctx.lineTo(bulbX + 6, bulbY - 12);
+                    ctx.lineTo(bulbX + 6, bulbY - 2);
+                    ctx.strokeStyle = '#475569';
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                }
+                ctx.shadowBlur = 0; // Reset shadows for other rendering
             }
-            if (mode === 'battery_aqueous') { ctx.fillStyle = 'rgba(56, 189, 248, 0.1)'; ctx.fillRect(0, 0, canvas.width, canvas.height); } 
-            else if (mode === 'battery_molten') { ctx.fillStyle = 'rgba(249, 115, 22, 0.1)'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
 
             if (mode === 'heat') {
                 let gradient = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - 100);
@@ -477,7 +560,6 @@
             offsetX = (canvas.width - (spacingX * (latticeCols - 1))) / 2;
             offsetY = (canvas.height - (spacingY * (latticeRows - 1))) / 2;
 
-            // Calculate precise bounding box for the electrons so they stay near the metal lattice
             const margin = ionRadius * 1.5;
             latticeBounds.minX = offsetX - margin;
             latticeBounds.maxX = offsetX + (latticeCols - 1) * spacingX + margin;
@@ -493,7 +575,7 @@
                 }
             }
             if (!isIonic) {
-                // Strictly enforce the electron ratio based on the substance (e.g. 10 Mg2+ = 20 e-)
+                // Strictly enforce the exact electron ratio
                 let totalIons = latticeRows * latticeCols;
                 let electronsPerIon = substanceData[currentSubstance].electronsPerIon;
                 let totalElectrons = totalIons * electronsPerIon;
@@ -507,11 +589,62 @@
             initSimulation();
         }
 
+        function drawRepulsiveForces() {
+            ctx.save();
+            ctx.strokeStyle = '#ef4444'; // Red "thunderstorm" repulsion line
+            ctx.lineWidth = 3;
+            ctx.lineJoin = 'miter';
+            
+            // Loop through the boundary where identical charges align (row 1 and row 2)
+            for (let c = 0; c < latticeCols - 1; c++) {
+                let ionTop = ions[1 * latticeCols + c];
+                let ionBot = ions[2 * latticeCols + c + 1]; // Offset by 1 because top row shifted right
+                
+                if (ionTop && ionBot) {
+                    let rTop = ionTop.isAnion ? ionRadius * 1.1 : ionRadius * 0.8;
+                    let rBot = ionBot.isAnion ? ionRadius * 1.1 : ionRadius * 0.8;
+                    
+                    // Start and end points just outside the ions
+                    let startX = ionTop.x;
+                    let startY = ionTop.y + rTop + 4;
+                    let endX = ionBot.x;
+                    let endY = ionBot.y - rBot - 4;
+                    
+                    // Draw jagged thunderstorm/spark line
+                    ctx.beginPath();
+                    ctx.moveTo(startX, startY);
+                    const numZigs = 7;
+                    const dx = endX - startX;
+                    const dy = endY - startY;
+                    
+                    for (let i = 1; i <= numZigs; i++) {
+                        let t = i / numZigs;
+                        let px = startX + dx * t;
+                        let py = startY + dy * t;
+                        if (i < numZigs) {
+                            // Alternate left and right for zigzag, plus random jitter
+                            let offset = (i % 2 === 0 ? 10 : -10);
+                            px += offset + (Math.random() - 0.5) * 6; 
+                        }
+                        ctx.lineTo(px, py);
+                    }
+                    ctx.stroke();
+                }
+            }
+            ctx.restore();
+        }
+
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawOverlays();
             solventParticles.forEach(particle => { particle.update(); particle.draw(); });
             ions.forEach(ion => { ion.update(); ion.draw(); });
+            
+            // Draw the repulsion thunderstorm effect if fractured
+            if (mode === 'force' && substanceData[currentSubstance].type === 'ionic' && ions.length > 0 && ions[0].fractured) {
+                drawRepulsiveForces();
+            }
+
             electrons.forEach(electron => { electron.update(); electron.draw(); });
             animationFrameId = requestAnimationFrame(animate);
         }
