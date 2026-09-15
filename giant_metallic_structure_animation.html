@@ -246,6 +246,10 @@
                     this.vx += (Math.random() - 0.5) * 1.5;
                     this.vy += (Math.random() - 0.5) * 1.5;
 
+                    // Diffusion force to prevent the middle from emptying out
+                    let centerX = canvas.width / 2;
+                    this.vx += (centerX - this.x) * 0.0002;
+
                     let maxSpeed = mode === 'battery_aqueous' ? 4 : 3;
                     let speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
                     if (speed > maxSpeed) {
@@ -258,11 +262,11 @@
                     // Crucial: Ions DO NOT pass through electrodes (40px wide on edges)
                     if (this.x < 40 + currentRadius) { 
                         this.x = 40 + currentRadius; 
-                        this.vx *= -0.3; // Collect at the electrode
+                        this.vx = Math.random() * 1.5 + 0.5; // Bounce back into the bulk
                     }
                     if (this.x > canvas.width - 40 - currentRadius) { 
                         this.x = canvas.width - 40 - currentRadius; 
-                        this.vx *= -0.3; // Collect at the electrode
+                        this.vx = -(Math.random() * 1.5 + 0.5); // Bounce back into the bulk
                     }
                     
                     if (this.y < currentRadius) { this.y = currentRadius; this.vy *= -1; }
@@ -412,6 +416,12 @@
                 if (mode === 'battery_aqueous') {
                     if (this.type === 'H⁺') this.vx -= 0.15; 
                     if (this.type === 'OH⁻') this.vx += 0.15; 
+                    
+                    // Diffusion force for ionized water to keep the middle filled
+                    if (this.type !== 'H₂O') {
+                        let centerX = canvas.width / 2;
+                        this.vx += (centerX - this.x) * 0.0002;
+                    }
                 }
                 this.vx += (Math.random() - 0.5) * 0.8; this.vy += (Math.random() - 0.5) * 0.8;
                 let maxSpeed = this.type === 'H₂O' ? 1.5 : 3.0;
@@ -421,8 +431,14 @@
                 this.x += this.vx; this.y += this.vy; this.angle += this.va;
                 
                 // Do not pass through electrodes
-                if (this.x > canvas.width - 45) { this.x = canvas.width - 45; this.vx *= -1; } 
-                if (this.x < 45) { this.x = 45; this.vx *= -1; }
+                if (this.x > canvas.width - 45) { 
+                    this.x = canvas.width - 45; 
+                    this.vx = -(Math.random() * 1.5 + 0.5); // Bounce back into the bulk
+                } 
+                if (this.x < 45) { 
+                    this.x = 45; 
+                    this.vx = Math.random() * 1.5 + 0.5; // Bounce back into the bulk
+                }
                 if (this.y > canvas.height + 15) this.y = -15; 
                 if (this.y < -15) this.y = canvas.height + 15;
             }
