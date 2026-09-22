@@ -1,1 +1,907 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { Beaker, FlaskConical, Filter, RotateCcw, Play, PlusCircle, CheckCircle, AlertTriangle, Info, XCircle, Flame, Droplet, Snowflake, Settings2 } from 'lucide-react';
 
+export default function SaltPreparationSim() {
+  // --- Chemical Selections ---
+  const [acidType, setAcidType] = useState('H2SO4'); // 'H2SO4' or 'HCl'
+  const [solidType, setSolidType] = useState('CuO'); // 'CuO', 'CuCO3', 'Cu(OH)2', 'Cu(HCO3)2', 'Cu'
+
+  // --- State Management ---
+  const [particles, setParticles] = useState([]);
+  const [acidCount, setAcidCount] = useState(0);
+  const [baseCount, setBaseCount] = useState(0);
+  const [isReacted, setIsReacted] = useState(false);
+  const [isFiltered, setIsFiltered] = useState(false);
+  const [isSaturated, setIsSaturated] = useState(false);
+  const [isCrystallized, setIsCrystallized] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [message, setMessage] = useState("Welcome! Select your chemicals, then add them to the empty beaker.");
+  const [status, setStatus] = useState('idle');
+
+  // --- Core Logic & Helpers ---
+  const getAcidString = () => acidType === 'H2SO4' ? 'H₂SO₄' : 'HCl';
+  const getSaltString = () => acidType === 'H2SO4' ? 'CuSO₄' : 'CuCl₂';
+  const getSolidString = () => {
+    if (solidType === 'CuCO3') return 'CuCO₃';
+    if (solidType === 'Cu(OH)2') return 'Cu(OH)₂';
+    if (solidType === 'Cu(HCO3)2') return 'Cu(HCO₃)₂';
+    return solidType;
+  };
+
+  const getEquation = () => {
+    const s = getSolidString() + '(s)';
+    if (solidType === 'Cu') return `Cu(s) + ${getAcidString()}(aq) \u2192 No Reaction`;
+    
+    const a = acidType === 'H2SO4' ? 'H₂SO₄(aq)' : '2HCl(aq)';
+    const salt = getSaltString() + '(aq)';
+    
+    if (solidType === 'CuO') return `${s} + ${a} \u2192 ${salt} + H₂O(l)`;
+    if (solidType === 'CuCO3') return `${s} + ${a} \u2192 ${salt} + H₂O(l) + CO₂(g)`;
+    if (solidType === 'Cu(OH)2') return `${s} + ${a} \u2192 ${salt} + 2H₂O(l)`;
+    if (solidType === 'Cu(HCO3)2') return `${s} + ${a} \u2192 ${salt} + 2H₂O(l) + 2CO₂(g)`;
+  };
+
+  const getValidPosition = useCallback((existingParticles, currentAcidCount = 1, isWideGroup = false) => {
+    let x, y;
+    let attempts = 0;
+    let valid = false;
+    const MIN_DIST = isWideGroup ? 35 : 16; 
+
+    const liquidTop = currentAcidCount === 0 ? 30 : 30 + (currentAcidCount * 15);
+    const minY = 20; 
+    const maxY = Math.max(minY + 5, liquidTop - 15); 
+
+    while (!valid && attempts < 100) {
+      if (isWideGroup) {
+        x = Math.random() * 40 + 30; 
+      } else {
+        x = Math.random() * 80 + 10; 
+      }
+      y = minY + Math.random() * (maxY - minY);
+
+      valid = true;
+      for (let p of existingParticles) {
+        const dx = p.x - x;
+        const dy = p.y - y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < MIN_DIST) {
+          valid = false;
+          break;
+        }
+      }
+      attempts++;
+    }
+    return { x, y };
+  }, []);
+
+  const resetSim = useCallback(() => {
+    setParticles([]);
+    setAcidCount(0);
+    setBaseCount(0);
+    setIsReacted(false);
+    setIsFiltered(false);
+    setIsSaturated(false);
+    setIsCrystallized(false);
+    setIsAnimating(false);
+    setMessage(`Beaker is empty. Add ${getAcidString()}(aq) or ${getSolidString()}(s) to begin.`);
+    setStatus('idle');
+  }, [acidType, solidType]);
+
+  useEffect(() => {
+    resetSim();
+  }, [resetSim]);
+
+  // --- Actions ---
+  const addAcid = () => {
+    if (isReacted || isFiltered || isAnimating || isSaturated || isCrystallized) return;
+    if (acidCount >= 4) {
+      setMessage("Maximum acid added for this beaker size.");
+      return;
+    }
+    
+    const newAcidCount = acidCount + 1;
+    const newId = Date.now();
+    let currentParticles = [...particles];
+
+    // Acid provides water, which dissolves any Cu(HCO3)2 sitting at the bottom
+    currentParticles = currentParticles.map(p => {
+      if (p.type === 'Cu(HCO3)2' && p.y <= 15) {
+         const pos = getValidPosition(currentParticles, newAcidCount, true);
+         return { ...p, x: pos.x, y: pos.y }; // Move it up into the liquid
+      }
+      return p;
+    });
+
+    // Acid provides H+ (always 2 for our conceptual "unit")
+    const posH1 = getValidPosition(currentParticles, newAcidCount);
+    currentParticles.push({ id: `h1_${newId}`, type: 'H+', x: posH1.x, y: posH1.y, isAqueous: true });
+    const posH2 = getValidPosition(currentParticles, newAcidCount);
+    currentParticles.push({ id: `h2_${newId}`, type: 'H+', x: posH2.x, y: posH2.y, isAqueous: true });
+    
+    // Acid provides Anion
+    if (acidType === 'H2SO4') {
+      const posSO4 = getValidPosition(currentParticles, newAcidCount);
+      currentParticles.push({ id: `anion_${newId}`, type: 'SO42-', x: posSO4.x, y: posSO4.y, isAqueous: true });
+    } else {
+      // HCl adds 2 Cl- per "unit"
+      const posCl1 = getValidPosition(currentParticles, newAcidCount);
+      currentParticles.push({ id: `anion1_${newId}`, type: 'Cl-', x: posCl1.x, y: posCl1.y, isAqueous: true });
+      const posCl2 = getValidPosition(currentParticles, newAcidCount);
+      currentParticles.push({ id: `anion2_${newId}`, type: 'Cl-', x: posCl2.x, y: posCl2.y, isAqueous: true });
+    }
+
+    const posW = getValidPosition(currentParticles, newAcidCount);
+    currentParticles.push({ id: `w_${newId}`, type: 'H2O_bg', x: posW.x, y: posW.y, isAqueous: true });
+
+    setParticles(currentParticles);
+    setAcidCount(newAcidCount);
+    setMessage(`Added dilute ${getAcidString()}(aq). The solution volume increases! (Current: ${newAcidCount} formula unit(s))`);
+  };
+
+  const addBase = () => {
+    if (isReacted || isFiltered || isAnimating || isSaturated || isCrystallized) return;
+    if (baseCount >= 6) {
+      setMessage(`Maximum ${getSolidString()} added. They are spaced to prevent overlapping.`);
+      return;
+    }
+
+    const newId = Date.now();
+    let currentParticles = [...particles];
+    let posSolid;
+
+    if (solidType === 'Cu(HCO3)2' && acidCount > 0) {
+      // It's soluble and there is liquid, so it dissolves directly into the solution
+      posSolid = getValidPosition(currentParticles, acidCount, true);
+    } else {
+      // 6 perfectly spaced slots for the enlarged beaker to guarantee solids never cover each other
+      const solidSlots = [12, 27, 42, 57, 72, 87];
+      let availableX = 50;
+      
+      for (let slot of solidSlots) {
+        const isOccupied = currentParticles.some(p => p.isSolid && Math.abs(p.x - slot) < 5 && p.y <= 15);
+        if (!isOccupied) {
+          availableX = slot;
+          break;
+        }
+      }
+      posSolid = { x: availableX, y: 5 + Math.random() * 2 }; 
+    }
+
+    currentParticles.push({ id: `solid_${newId}`, type: solidType, x: posSolid.x, y: posSolid.y, isAqueous: false, isSolid: true });
+
+    setParticles(currentParticles);
+    setBaseCount(prev => prev + 1);
+    
+    if (solidType === 'Cu(HCO3)2') {
+      if (acidCount > 0) {
+        setMessage(`Added soluble Cu(HCO₃)₂. It dissolves in the aqueous solution. (Current: ${baseCount + 1} formula unit(s))`);
+      } else {
+        setMessage(`Added soluble Cu(HCO₃)₂(s). It sits at the bottom since there is no water yet. (Current: ${baseCount + 1} formula unit(s))`);
+      }
+    } else {
+      setMessage(`Added insoluble ${getSolidString()}(s). It sinks to the bottom. (Current: ${baseCount + 1} formula unit(s))`);
+    }
+  };
+
+  const reactChemicals = () => {
+    if (acidCount === 0 && baseCount === 0) {
+      setMessage("Add some chemicals first!");
+      return;
+    }
+    if (isReacted || isAnimating || isSaturated || isCrystallized) return;
+
+    if (solidType === 'Cu') {
+      setMessage(`Cu could not react with dilute HCl or dilute H₂SO₄ so no salt can be formed.`);
+      setStatus('failed');
+      return;
+    }
+
+    let availableSolid = particles.filter(p => p.isSolid);
+    let availableH = particles.filter(p => p.type === 'H+');
+    
+    let reactionsOccurred = Math.min(availableSolid.length, Math.floor(availableH.length / 2));
+
+    if (reactionsOccurred === 0) {
+      setMessage("No reaction can occur. Missing reactants.");
+      return;
+    }
+
+    setIsAnimating(true);
+    const stateSymbol = (solidType === 'Cu(HCO3)2' && acidCount > 0) ? '(aq)' : '(s)';
+    setMessage(`Reaction occurring: H⁺(aq) ions are moving to attack the reactant ${getSolidString()}${stateSymbol}...`);
+
+    let updatedParticles = [...particles];
+    let reactionPairs = [];
+
+    // Phase 1: Animate H+ attacking Solid
+    for (let i = 0; i < reactionsOccurred; i++) {
+      let solid = availableSolid[i];
+      let h1 = availableH[i * 2];
+      let h2 = availableH[i * 2 + 1];
+
+      updatedParticles = updatedParticles.map(p => {
+        if (p.id === h1.id) return { ...p, x: Math.max(5, solid.x - 14), y: solid.y + 6, isReacting: true };
+        if (p.id === h2.id) return { ...p, x: Math.min(95, solid.x + 14), y: solid.y + 6, isReacting: true };
+        if (p.id === solid.id) return { ...p, isReacting: true };
+        return p;
+      });
+
+      reactionPairs.push({ solid, h1, h2 });
+    }
+
+    setParticles(updatedParticles);
+
+    // Phase 2: Create resulting formula unit groups
+    setTimeout(() => {
+      setParticles(prevParticles => {
+        let finalParticles = prevParticles.filter(p => p.type === 'H2O_bg' || p.type === 'H2O_prod');
+        
+        const reactedSolidIds = reactionPairs.map(pair => pair.solid.id);
+        const unreactedSolid = prevParticles.filter(p => p.isSolid && !reactedSolidIds.includes(p.id));
+        finalParticles = [...finalParticles, ...unreactedSolid];
+        
+        const saltGroupType = acidType === 'H2SO4' ? 'CuSO4_group' : 'CuCl2_group';
+        const acidGroupType = acidType === 'H2SO4' ? 'H2SO4_group' : 'HCl_group';
+
+        // Form Salt grouped formula units
+        for (let i = 0; i < reactionsOccurred; i++) {
+          const newId = Date.now() + '_salt_' + i;
+          const pos = getValidPosition(finalParticles, acidCount, true); 
+          finalParticles.push({ id: newId, type: saltGroupType, x: pos.x, y: pos.y, isAqueous: true });
+          
+          // Generate byproduct water
+          const h2oPos = getValidPosition(finalParticles, acidCount);
+          finalParticles.push({ id: `h2o_prod_${newId}`, type: 'H2O_prod', x: h2oPos.x, y: h2oPos.y, isAqueous: true });
+          
+          if (solidType === 'Cu(OH)2' || solidType === 'Cu(HCO3)2') {
+             // Extra water for hydroxide and hydrogencarbonate
+             const h2oPos2 = getValidPosition(finalParticles, acidCount);
+             finalParticles.push({ id: `h2o_prod2_${newId}`, type: 'H2O_prod', x: h2oPos2.x, y: h2oPos2.y, isAqueous: true });
+          }
+
+          if (solidType === 'CuCO3') {
+             // Generate CO2 gas that bubbles up
+             finalParticles.push({ id: `co2_${newId}`, type: 'CO2_gas', x: pos.x, y: pos.y, isAqueous: false });
+          } else if (solidType === 'Cu(HCO3)2') {
+             // Generate 2x CO2 gas
+             finalParticles.push({ id: `co2_1_${newId}`, type: 'CO2_gas', x: pos.x - 5, y: pos.y, isAqueous: false });
+             finalParticles.push({ id: `co2_2_${newId}`, type: 'CO2_gas', x: pos.x + 5, y: pos.y, isAqueous: false });
+          }
+        }
+
+        // Form grouped units for EXCESS acid
+        const excessAcidCount = acidCount - reactionsOccurred;
+        for (let i = 0; i < excessAcidCount; i++) {
+           const newId = Date.now() + '_acid_' + i;
+           if (acidGroupType === 'H2SO4_group') {
+             const pos = getValidPosition(finalParticles, acidCount, true); 
+             finalParticles.push({ id: newId, type: acidGroupType, x: pos.x, y: pos.y, isAqueous: true });
+           } else {
+             // For HCl, 1 unit of acidCount provides 2 HCl formula units
+             const pos1 = getValidPosition(finalParticles, acidCount, true); 
+             finalParticles.push({ id: newId + '_1', type: acidGroupType, x: pos1.x, y: pos1.y, isAqueous: true });
+             const pos2 = getValidPosition(finalParticles, acidCount, true); 
+             finalParticles.push({ id: newId + '_2', type: acidGroupType, x: pos2.x, y: pos2.y, isAqueous: true });
+           }
+        }
+
+        return finalParticles;
+      });
+
+      setIsReacted(true);
+      setIsAnimating(false);
+
+      const excessAcidCount = acidCount - reactionsOccurred;
+      const remainingSolid = availableSolid.length - reactionsOccurred;
+
+      let baseMsg = "Reaction complete!";
+      if (solidType === 'CuCO3' || solidType === 'Cu(HCO3)2') baseMsg += " CO₂(g) effervescence observed.";
+
+      if (remainingSolid > 0) {
+        if (solidType === 'Cu(HCO3)2') {
+          setMessage(`${baseMsg} WARNING: Excess Cu(HCO₃)₂ is soluble in water. It remains aqueous so it cannot be removed by filtration. This method is not applicable to prepare salt as both reactants are soluble in water Cu(HCO₃)₂.`);
+          setStatus('failed');
+        } else {
+          setMessage(`${baseMsg} ${getSolidString()}(s) is in excess and remains safely at the bottom.`);
+          setStatus('idle');
+        }
+      } else if (excessAcidCount > 0) {
+        setMessage(`${baseMsg} WARNING: Excess ${getAcidString()}(aq) remains in the solution. CANNOT separate ${getSaltString()}(aq) from ${getAcidString()}(aq) as both are soluble in water.`);
+        setStatus('idle');
+      } else {
+        setMessage(`${baseMsg} Perfect stoichiometric amounts used. No need to filter as all reactants are completely reacted.`);
+        setStatus('success');
+      }
+    }, 1500); 
+  };
+
+  const filterMixture = () => {
+    if (!isReacted || isAnimating || isSaturated || isCrystallized) {
+      setMessage("React the mixture before filtering!");
+      return;
+    }
+
+    const hasSolid = particles.some(p => p.isSolid && p.type !== 'Cu(HCO3)2');
+    if (!hasSolid && status === 'success') {
+      setMessage("No need to filter as all reactants are completely reacted.");
+      return;
+    }
+    
+    // Keep Cu(HCO3)2 because it is soluble and passes right through the filter!
+    const filteredParticles = particles.filter(p => p.isAqueous || p.type === 'Cu(HCO3)2');
+    setParticles(filteredParticles);
+    setIsFiltered(true);
+
+    const hasRemainingAcid = particles.some(p => p.type === 'H2SO4_group' || p.type === 'HCl_group');
+    const hasSalt = particles.some(p => p.type === 'CuSO4_group' || p.type === 'CuCl2_group');
+    const hasRemainingSolubleBase = particles.some(p => p.type === 'Cu(HCO3)2');
+
+    if (!hasSalt) {
+      setMessage("Filtered. But there was no salt produced!");
+      setStatus('idle');
+    } else if (hasRemainingAcid) {
+      setMessage(`Filtration FAILED to purify! ${getAcidString()}(aq) and ${getSaltString()}(aq) are both soluble in water. They can pass right through the filter paper.`);
+      setStatus('failed');
+    } else if (hasRemainingSolubleBase) {
+      setMessage(`Filtration FAILED to purify! Excess Cu(HCO₃)₂ is soluble in water. It passes right through the filter paper along with the ${getSaltString()}(aq).`);
+      setStatus('failed');
+    } else {
+      const solubilityWord = solidType === 'Cu(HCO3)2' ? '' : 'insoluble ';
+      setMessage(`SUCCESS! The excess ${solubilityWord}${getSolidString()}(s) was removed. You now have a ${getSaltString()}(aq) solution.`);
+      setStatus('success');
+    }
+  };
+
+  const evaporate = () => {
+    setIsAnimating(true);
+    setMessage("Heating gently to slowly remove a bit of water... The solution becomes concentrated.");
+
+    setTimeout(() => {
+      setParticles(prev => {
+        let finalParticles = prev.filter(p => {
+          if (p.type === 'H2O_bg' || p.type === 'H2O_prod') return Math.random() > 0.5; 
+          return true;
+        });
+
+        finalParticles = finalParticles.map(p => {
+          if (p.type === 'H2O_bg' || p.type === 'H2O_prod') return { ...p, y: 10 + Math.random() * 15 }; 
+          if (p.type === 'CuSO4_group' || p.type === 'CuCl2_group') return { ...p, y: 15 + Math.random() * 10 };
+          return p;
+        });
+
+        return finalParticles;
+      });
+
+      setIsSaturated(true);
+      setIsAnimating(false);
+      setMessage("Ready to carry out crystallization.");
+    }, 3000); 
+  };
+
+  const coolToCrystallize = () => {
+    setIsAnimating(true);
+    setMessage("Cooling the saturated solution at room condition...");
+
+    setTimeout(() => {
+      setParticles(prev => {
+        let crystalX = 20; 
+        let finalParticles = prev.map(p => {
+          if (p.type === 'CuSO4_group' || p.type === 'CuCl2_group') {
+            const newX = crystalX;
+            crystalX += 20; 
+            const crystalType = p.type === 'CuSO4_group' ? 'CuSO4_crystal' : 'CuCl2_crystal';
+            return { ...p, type: crystalType, x: newX, y: 5 + Math.random() * 3, isAqueous: false };
+          }
+          return p;
+        });
+        return finalParticles;
+      });
+
+      setIsCrystallized(true);
+      setIsAnimating(false);
+      setMessage(`SUCCESS! Upon further slow cooling of the saturated solution at room condition, pure ${getSaltString()}(s) crystals are formed.`);
+    }, 1500);
+  };
+
+  // --- Render Helpers ---
+  const getParticleLabel = (type, inBeaker = false, acidCountForLabel = 0) => {
+    switch (type) {
+      case 'H+': return <div className="flex flex-col items-center justify-center leading-none mt-0.5"><span>H⁺</span><span className="text-[9px] font-normal">(aq)</span></div>;
+      case 'SO42-': return <div className="flex flex-col items-center justify-center leading-none mt-0.5"><span>SO₄²⁻</span><span className="text-[9px] font-normal">(aq)</span></div>;
+      case 'Cl-': return <div className="flex flex-col items-center justify-center leading-none mt-0.5"><span>Cl⁻</span><span className="text-[9px] font-normal">(aq)</span></div>;
+      case 'H2O_bg': 
+      case 'H2O_prod': return <div className="flex flex-col items-center justify-center leading-none mt-0.5"><span>H₂O</span><span className="text-[9px] font-normal">(l)</span></div>;
+      case 'CO2_gas': return <div className="flex items-center justify-center font-bold">CO₂</div>;
+      
+      // Complex Groups
+      case 'CuSO4_group':
+        return (
+          <div className="flex flex-col items-center">
+            <div className="blob-shape-blue flex items-center justify-center gap-4 border-[3px] border-dashed border-blue-400 p-3 bg-blue-50/70 shadow-sm transition-all">
+              <div className="w-10 h-10 rounded-full bg-blue-600 flex flex-col items-center justify-center text-xs text-white font-bold shrink-0 shadow-md"><span>Cu²⁺</span></div>
+              <div className="w-12 h-12 rounded-full bg-yellow-400 flex flex-col items-center justify-center text-xs text-black font-bold shrink-0 shadow-md"><span>SO₄²⁻</span></div>
+            </div>
+            <span className="text-[11px] font-extrabold text-blue-900 mt-2 bg-white/90 px-2 py-0.5 rounded shadow-sm relative z-10">CuSO₄(aq)</span>
+          </div>
+        );
+      
+      case 'CuCl2_group':
+        return (
+          <div className="flex flex-col items-center">
+            <div className="blob-shape-teal flex items-center justify-center gap-2 border-[3px] border-dashed border-teal-400 p-3 bg-teal-50/70 shadow-sm transition-all">
+              <div className="w-9 h-9 rounded-full bg-green-400 flex flex-col items-center justify-center text-[10px] text-green-950 font-bold shrink-0 shadow-md"><span>Cl⁻</span></div>
+              <div className="w-10 h-10 rounded-full bg-blue-600 flex flex-col items-center justify-center text-xs text-white font-bold shrink-0 shadow-md"><span>Cu²⁺</span></div>
+              <div className="w-9 h-9 rounded-full bg-green-400 flex flex-col items-center justify-center text-[10px] text-green-950 font-bold shrink-0 shadow-md"><span>Cl⁻</span></div>
+            </div>
+            <span className="text-[11px] font-extrabold text-teal-900 mt-2 bg-white/90 px-2 py-0.5 rounded shadow-sm relative z-10">CuCl₂(aq)</span>
+          </div>
+        );
+
+      case 'H2SO4_group':
+        return (
+          <div className="flex flex-col items-center">
+            <div className="blob-shape-red flex items-center justify-center gap-3 border-[3px] border-dashed border-red-500 p-3 bg-red-50/80 shadow-sm transition-all">
+              <div className="w-8 h-8 rounded-full bg-red-500 flex flex-col items-center justify-center text-xs text-white font-bold shrink-0 shadow-md"><span>H⁺</span></div>
+              <div className="w-12 h-12 rounded-full bg-yellow-400 flex flex-col items-center justify-center text-xs text-black font-bold shrink-0 shadow-md"><span>SO₄²⁻</span></div>
+              <div className="w-8 h-8 rounded-full bg-red-500 flex flex-col items-center justify-center text-xs text-white font-bold shrink-0 shadow-md"><span>H⁺</span></div>
+            </div>
+            <span className="text-[11px] font-extrabold text-red-700 mt-2 bg-red-100 border border-red-300 px-2 py-0.5 rounded shadow-sm flex items-center gap-1 relative z-10">
+               <XCircle className="w-3 h-3 text-red-600" /> Excess H₂SO₄(aq)
+            </span>
+          </div>
+        );
+
+      case 'HCl_group':
+        return (
+          <div className="flex flex-col items-center">
+            <div className="blob-shape-red flex items-center justify-center gap-3 border-[3px] border-dashed border-red-500 p-3 bg-red-50/80 shadow-sm transition-all">
+              <div className="w-8 h-8 rounded-full bg-red-500 flex flex-col items-center justify-center text-xs text-white font-bold shrink-0 shadow-md"><span>H⁺</span></div>
+              <div className="w-9 h-9 rounded-full bg-green-400 flex flex-col items-center justify-center text-[10px] text-green-950 font-bold shrink-0 shadow-md"><span>Cl⁻</span></div>
+            </div>
+            <span className="text-[11px] font-extrabold text-red-700 mt-2 bg-red-100 border border-red-300 px-2 py-0.5 rounded shadow-sm flex items-center gap-1 relative z-10">
+               <XCircle className="w-3 h-3 text-red-600" /> Excess HCl(aq)
+            </span>
+          </div>
+        );
+
+      case 'CuSO4_crystal':
+        return (
+          <div className="flex flex-col items-center justify-center relative w-full h-full mt-2">
+            <div className="w-12 h-12 bg-blue-600 rounded-md rotate-45 flex items-center justify-center border-[3px] border-blue-800 z-10 shadow-lg">
+              <span className="-rotate-45 text-[10px] font-bold text-white text-center leading-none">CuSO₄<br/>(s)</span>
+            </div>
+          </div>
+        );
+
+      case 'CuCl2_crystal':
+        return (
+          <div className="flex flex-col items-center justify-center relative w-full h-full mt-2">
+            <div className="w-12 h-12 bg-teal-600 rounded-md rotate-45 flex items-center justify-center border-[3px] border-teal-800 z-10 shadow-lg">
+              <span className="-rotate-45 text-[10px] font-bold text-white text-center leading-none">CuCl₂<br/>(s)</span>
+            </div>
+          </div>
+        );
+
+      case 'CuO':
+      case 'CuCO3':
+        // Common 2-circle structure for compound solids
+        const rightLabel = type === 'CuO' ? 'O²⁻' : 'CO₃²⁻';
+        const rightColor = type === 'CuO' ? 'bg-red-800' : 'bg-orange-600';
+        return (
+          <div className="flex flex-col items-center justify-center relative w-full h-full">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-slate-700 rounded-full flex flex-col items-center justify-center border-2 border-slate-900 z-10 -mr-2 shadow-sm text-white">
+                <span className="text-[10px] font-bold leading-none">Cu²⁺</span>
+              </div>
+              <div className={`w-8 h-8 ${rightColor} rounded-full flex flex-col items-center justify-center border-2 border-slate-900 z-0 shadow-sm text-white`}>
+                <span className="text-[9px] font-bold leading-none">{rightLabel}</span>
+              </div>
+            </div>
+            <span className="absolute -bottom-5 text-[11px] text-slate-900 font-extrabold whitespace-nowrap bg-white/60 px-1 rounded">{getSolidString()}(s)</span>
+          </div>
+        );
+
+      case 'Cu(OH)2':
+        // 3-circle structure for Copper(II) hydroxide
+        return (
+          <div className="flex flex-col items-center justify-center relative w-full h-full">
+            <div className="flex items-center">
+              <div className="w-7 h-7 bg-pink-600 rounded-full flex flex-col items-center justify-center border-2 border-slate-900 z-0 -mr-2 shadow-sm text-white">
+                <span className="text-[8px] font-bold leading-none">OH⁻</span>
+              </div>
+              <div className="w-8 h-8 bg-slate-700 rounded-full flex flex-col items-center justify-center border-2 border-slate-900 z-10 shadow-sm text-white">
+                <span className="text-[10px] font-bold leading-none">Cu²⁺</span>
+              </div>
+              <div className="w-7 h-7 bg-pink-600 rounded-full flex flex-col items-center justify-center border-2 border-slate-900 z-0 -ml-2 shadow-sm text-white">
+                <span className="text-[8px] font-bold leading-none">OH⁻</span>
+              </div>
+            </div>
+            <span className="absolute -bottom-5 text-[11px] text-slate-900 font-extrabold whitespace-nowrap bg-white/60 px-1 rounded">Cu(OH)₂(s)</span>
+          </div>
+        );
+
+      case 'Cu(HCO3)2':
+        const stateSymbol = (inBeaker && acidCountForLabel > 0) ? '(aq)' : '(s)';
+        return (
+          <div className="flex flex-col items-center justify-center relative w-full h-full">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-cyan-700 rounded-full flex flex-col items-center justify-center border-2 border-slate-900 z-0 -mr-2 shadow-sm text-white">
+                <span className="text-[8px] font-bold leading-none">HCO₃⁻</span>
+              </div>
+              <div className="w-8 h-8 bg-slate-700 rounded-full flex flex-col items-center justify-center border-2 border-slate-900 z-10 shadow-sm text-white">
+                <span className="text-[10px] font-bold leading-none">Cu²⁺</span>
+              </div>
+              <div className="w-8 h-8 bg-cyan-700 rounded-full flex flex-col items-center justify-center border-2 border-slate-900 z-0 -ml-2 shadow-sm text-white">
+                <span className="text-[8px] font-bold leading-none">HCO₃⁻</span>
+              </div>
+            </div>
+            <span className="absolute -bottom-5 text-[11px] text-slate-900 font-extrabold whitespace-nowrap bg-white/60 px-1 rounded">Cu(HCO₃)₂{stateSymbol}</span>
+          </div>
+        );
+
+      case 'Cu':
+        return (
+          <div className="flex flex-col items-center justify-center relative w-full h-full">
+            <div className="w-10 h-10 bg-amber-600 rounded-full flex flex-col items-center justify-center border-2 border-amber-900 shadow-sm text-white">
+              <span className="text-xs font-bold leading-none">Cu</span>
+            </div>
+            <span className="absolute -bottom-5 text-[11px] text-amber-900 font-extrabold whitespace-nowrap bg-white/60 px-1 rounded">Cu(s)</span>
+          </div>
+        );
+        
+      default: return '';
+    }
+  };
+
+  const getParticleStyle = (p) => {
+    const isDissolved = p.type === 'Cu(HCO3)2' && acidCount > 0;
+    let baseStyle = "absolute flex items-center justify-center font-bold text-xs md:text-sm shadow-sm transition-all ease-in-out";
+    
+    // Aqueous floating
+    if (!p.isReacting && (!p.isSolid || isDissolved) && p.type !== 'CuSO4_crystal' && p.type !== 'CuCl2_crystal' && p.type !== 'CO2_gas') {
+       if (p.type === 'H+') baseStyle += " floating-fast";
+       else if (p.type.includes('_group') || isDissolved) baseStyle += " floating-med";
+       else baseStyle += " floating-slow";
+    }
+
+    if (p.isSolid) {
+      if (p.type === 'Cu(OH)2' || p.type === 'Cu(HCO3)2') {
+        baseStyle += " z-30 flex-col bg-transparent shadow-none w-[75px] h-[32px]";
+      } else {
+        baseStyle += " z-30 flex-col bg-transparent shadow-none w-[60px] h-[32px]";
+      }
+    } else if (p.type.includes('_group')) {
+      baseStyle += " z-20 flex-col bg-transparent shadow-none"; 
+    } else if (p.type.includes('_crystal')) {
+      baseStyle += " z-30 flex-col bg-transparent shadow-none w-[60px] h-[60px]";
+    } else if (p.type === 'CO2_gas') {
+      baseStyle += " gas-bubble z-40 w-8 h-8 rounded-full bg-white/80 border border-slate-300 text-slate-600";
+    } else {
+      baseStyle += " rounded-full z-10";
+      if (p.isReacting) baseStyle += " z-20 shadow-md ring-4 ring-yellow-400";
+    }
+
+    const position = { 
+      left: `${p.x}%`, 
+      bottom: `${p.y}%`, 
+      transform: 'translateX(-50%)',
+      transitionDuration: p.isReacting ? '1000ms' : '1000ms'
+    };
+
+    switch (p.type) {
+      case 'CuO':
+      case 'CuCO3':
+      case 'Cu(OH)2':
+      case 'Cu(HCO3)2':
+      case 'Cu':
+        return { ...position, className: `${baseStyle} ${p.isReacting ? 'animate-pulse' : ''}` };
+      case 'H+':
+        return { ...position, className: `${baseStyle} w-10 h-10 bg-red-500 text-white opacity-95` };
+      case 'SO42-':
+        return { ...position, className: `${baseStyle} w-14 h-14 bg-yellow-400 text-black opacity-95` };
+      case 'Cl-':
+        return { ...position, className: `${baseStyle} w-10 h-10 bg-green-400 text-green-950 opacity-95` };
+      case 'H2O_bg':
+      case 'H2O_prod':
+        return { ...position, className: `${baseStyle} w-12 h-12 bg-cyan-100/60 text-cyan-800 border border-cyan-400` };
+      case 'CO2_gas':
+      case 'CuSO4_group':
+      case 'CuCl2_group':
+      case 'H2SO4_group':
+      case 'HCl_group':
+      case 'CuSO4_crystal':
+      case 'CuCl2_crystal':
+        return { ...position, className: baseStyle }; 
+      default:
+        return { ...position, className: baseStyle };
+    }
+  };
+
+  const cu2Count = particles.filter(p => p.type === 'CuSO4_group' || p.type === 'CuCl2_group').length;
+  const fluidColor = cu2Count === 0 ? 'bg-blue-100/40' :
+                     cu2Count <= 2 ? 'bg-blue-300/50' : 
+                     acidType === 'HCl' ? 'bg-teal-500/60' : 'bg-blue-500/60';
+
+  const baseHeight = acidCount === 0 ? 0 : 30 + acidCount * 15;
+  const liquidHeightPercent = (isSaturated || isCrystallized) ? Math.max(20, baseHeight - 15) : baseHeight;
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-800 overflow-x-hidden">
+      
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes floatFast { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, -8px); } }
+        @keyframes floatMed { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, -4px); } }
+        @keyframes floatSlow { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, -2px); } }
+        .floating-fast { animation: floatFast 3s infinite ease-in-out; }
+        .floating-med { animation: floatMed 5s infinite ease-in-out; }
+        .floating-slow { animation: floatSlow 6s infinite ease-in-out; }
+
+        @keyframes morphBlob {
+          0%, 100% { border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; }
+          34% { border-radius: 70% 30% 50% 50% / 30% 30% 70% 70%; }
+          67% { border-radius: 100% 60% 60% 100% / 100% 100% 60% 60%; }
+        }
+        .blob-shape-blue { animation: morphBlob 8s ease-in-out infinite alternate; }
+        .blob-shape-teal { animation: morphBlob 8.5s ease-in-out infinite alternate; }
+        .blob-shape-red { animation: morphBlob 9s ease-in-out infinite alternate-reverse; }
+        
+        .animate-fade-in { animation: fadeIn 0.8s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        @keyframes floatUpGas {
+           0% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+           100% { transform: translate(-50%, -250px) scale(1.5); opacity: 0; }
+        }
+        .gas-bubble { animation: floatUpGas 2.5s forwards ease-in; pointer-events: none; }
+      `}} />
+
+      <div className="max-w-[1400px] mx-auto space-y-6"> 
+        
+        <header className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-extrabold text-slate-800 flex items-center gap-3">
+                <Beaker className="text-blue-600 w-8 h-8" />
+                HKDSE Chemistry: Soluble Salts
+              </h1>
+              <p className="mt-2 text-slate-600">
+                <strong>Method 1: Insoluble Reactant + Acid.</strong> <br/>
+                Experiment with different combinations to learn why the insoluble reactant <em>must</em> be in excess.
+              </p>
+            </div>
+            
+            {/* Chemical Selection Panel */}
+            <div className="bg-slate-100 p-3 rounded-xl border border-slate-200 flex flex-col gap-3 min-w-[280px]">
+              <div className="flex items-center gap-2 text-sm font-bold text-slate-700 uppercase tracking-wider">
+                <Settings2 className="w-4 h-4" /> Setup Chemicals
+              </div>
+              <select 
+                value={acidType} 
+                onChange={(e) => setAcidType(e.target.value)}
+                className="w-full p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+              >
+                <option value="H2SO4">Sulphuric acid — H₂SO₄(aq)</option>
+                <option value="HCl">Hydrochloric acid — HCl(aq)</option>
+              </select>
+              <select 
+                value={solidType} 
+                onChange={(e) => setSolidType(e.target.value)}
+                className="w-full p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+              >
+                <option value="CuO">Copper(II) oxide — CuO(s)</option>
+                <option value="CuCO3">Copper(II) carbonate — CuCO₃(s)</option>
+                <option value="Cu(OH)2">Copper(II) hydroxide — Cu(OH)₂(s)</option>
+                <option value="Cu(HCO3)2">Copper(II) hydrogencarbonate — Cu(HCO₃)₂(s)</option>
+                <option value="Cu">Copper metal — Cu(s)</option>
+              </select>
+            </div>
+          </div>
+        </header>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          {/* Main Simulation Area */}
+          <div className="lg:col-span-9 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center overflow-hidden">
+            
+            <div className={`w-full p-4 rounded-xl mb-6 flex items-start gap-3 transition-colors ${
+              status === 'success' ? 'bg-green-100 text-green-800 border border-green-300' :
+              status === 'failed' ? 'bg-red-100 text-red-800 border border-red-300' :
+              isAnimating ? 'bg-yellow-50 text-yellow-800 border border-yellow-200' :
+              'bg-blue-50 text-blue-800 border border-blue-200'
+            }`}>
+              {status === 'success' && <CheckCircle className="w-6 h-6 flex-shrink-0 mt-0.5" />}
+              {status === 'failed' && <AlertTriangle className="w-6 h-6 flex-shrink-0 mt-0.5" />}
+              {(status === 'idle' && !isAnimating) && <Info className="w-6 h-6 flex-shrink-0 mt-0.5" />}
+              {isAnimating && <Play className="w-6 h-6 flex-shrink-0 mt-0.5 animate-pulse" />}
+              <div className="font-medium text-lg md:text-xl leading-tight">{message}</div>
+            </div>
+
+            {/* The Beaker */}
+            <div className="relative w-full max-w-[650px] h-[450px] md:h-[550px] border-[6px] border-t-0 border-slate-300 rounded-b-[40px] md:rounded-b-[60px] bg-white shadow-inner mt-2">
+              <div className="absolute top-0 -left-3 w-5 h-2 bg-slate-300 rounded-l-full"></div>
+              <div className="absolute top-0 -right-3 w-5 h-2 bg-slate-300 rounded-r-full"></div>
+              
+              {/* Dynamic Liquid Level */}
+              <div 
+                className={`absolute bottom-0 w-full ease-in-out ${fluidColor} flex items-end justify-center pb-2 rounded-b-[34px] md:rounded-b-[54px]`}
+                style={{ 
+                  height: `${liquidHeightPercent}%`, 
+                  opacity: acidCount > 0 ? 1 : 0,
+                  transitionProperty: 'all',
+                  transitionDuration: (isSaturated || isCrystallized) ? '3000ms' : '1000ms'
+                }}
+              >
+                <div className="w-[90%] h-2 bg-white/30 rounded-full blur-md mb-2"></div>
+              </div>
+
+              {isSaturated && !isCrystallized && (
+                <div className="absolute top-[20%] left-0 w-full flex flex-col items-center z-40 animate-fade-in pointer-events-none">
+                  <div className="bg-blue-100/95 text-blue-900 border-2 border-blue-400 font-bold px-4 py-2 rounded-xl text-sm md:text-base shadow-md mb-2 flex items-center gap-2">
+                     <Droplet className="w-4 h-4 md:w-5 md:h-5 text-blue-600" /> Saturated Solution
+                  </div>
+                  <div className="flex flex-col items-center text-slate-700 mt-2">
+                    <span className="text-[11px] md:text-sm font-semibold bg-white/90 border border-slate-300 px-3 py-1.5 rounded-lg text-center leading-tight max-w-[240px] shadow-sm">
+                      further slow cooling of saturated solution at room condition
+                    </span>
+                    <svg className="w-6 h-12 md:h-16 text-slate-500 mt-1 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m0 0l-4-4m4 4l4-4" />
+                    </svg>
+                  </div>
+                </div>
+              )}
+
+              {particles.map(p => {
+                const styleProps = getParticleStyle(p);
+                return (
+                  <div key={p.id} style={{ left: styleProps.left, bottom: styleProps.bottom, transform: styleProps.transform }} className={styleProps.className}>
+                    {getParticleLabel(p.type, true, acidCount)}
+                  </div>
+                );
+              })}
+            </div>
+            
+            <div className="mt-8 text-center bg-slate-100 px-6 py-3 rounded-lg w-fit mx-auto overflow-x-auto max-w-full border border-slate-200 shadow-sm">
+              <p className="text-sm text-slate-500 font-bold mb-1 uppercase tracking-wider">Chemical Equation</p>
+              <p className="text-base sm:text-lg md:text-xl font-mono font-bold whitespace-nowrap text-blue-900">
+                {getEquation()}
+              </p>
+            </div>
+
+          </div>
+
+          {/* Controls & Legend Area */}
+          <div className="lg:col-span-3 space-y-6">
+            
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <FlaskConical className="w-6 h-6 text-purple-600" />
+                Controls
+              </h2>
+              
+              <div className="space-y-3">
+                <button 
+                  onClick={addAcid} 
+                  disabled={isReacted || isFiltered || isAnimating || isSaturated || isCrystallized || acidCount >= 4}
+                  className="w-full flex items-center justify-between p-3 md:p-4 bg-red-50 hover:bg-red-100 text-red-700 rounded-xl border border-red-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-base md:text-lg"
+                >
+                  <span className="font-semibold text-left">1. Add {getAcidString()}(aq)</span>
+                  <PlusCircle className="w-5 h-5 md:w-6 md:h-6 shrink-0" />
+                </button>
+                
+                <button 
+                  onClick={addBase} 
+                  disabled={isReacted || isFiltered || isAnimating || isSaturated || isCrystallized || baseCount >= 6}
+                  className="w-full flex items-center justify-between p-3 md:p-4 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl border border-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-base md:text-lg"
+                >
+                  <span className="font-semibold text-left">2. Add {getSolidString()}(s)</span>
+                  <PlusCircle className="w-5 h-5 md:w-6 md:h-6 shrink-0" />
+                </button>
+
+                <div className="my-4 border-t border-slate-200"></div>
+
+                <button 
+                  onClick={reactChemicals} 
+                  disabled={isReacted || isAnimating || isSaturated || isCrystallized || (acidCount === 0 && baseCount === 0)}
+                  className="w-full flex items-center justify-between p-3 md:p-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95 text-base md:text-lg"
+                >
+                  <span className="font-bold text-left tracking-wide">3. REACT</span>
+                  <Play className="w-5 h-5 md:w-6 md:h-6 fill-current shrink-0" />
+                </button>
+
+                <button 
+                  onClick={filterMixture} 
+                  disabled={!isReacted || isFiltered || isAnimating || isSaturated || isCrystallized}
+                  className="w-full flex items-center justify-between p-3 md:p-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95 text-base md:text-lg"
+                >
+                  <span className="font-bold text-left tracking-wide">4. FILTER</span>
+                  <Filter className="w-5 h-5 md:w-6 md:h-6 fill-current shrink-0" />
+                </button>
+
+                {isReacted && status === 'success' && !isSaturated && !isCrystallized && (
+                  <button 
+                    onClick={evaporate} 
+                    disabled={isAnimating}
+                    className="w-full flex items-center justify-between p-3 md:p-4 bg-purple-500 hover:bg-purple-600 text-white rounded-xl shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95 text-base md:text-lg animate-fade-in"
+                  >
+                    <span className="font-bold text-left tracking-wide leading-tight">5. Remove water<br/>(Evaporation)</span>
+                    <Flame className="w-5 h-5 md:w-6 md:h-6 fill-current shrink-0" />
+                  </button>
+                )}
+
+                {isSaturated && !isCrystallized && (
+                  <button 
+                    onClick={coolToCrystallize} 
+                    disabled={isAnimating}
+                    className="w-full flex items-center justify-between p-3 md:p-4 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95 text-base md:text-lg animate-fade-in"
+                  >
+                    <span className="font-bold text-left tracking-wide leading-tight">6. Cool to<br/>Crystallize</span>
+                    <Snowflake className="w-5 h-5 md:w-6 md:h-6 fill-current shrink-0" />
+                  </button>
+                )}
+
+                <button 
+                  onClick={resetSim} 
+                  disabled={isAnimating}
+                  className="w-full flex items-center justify-center gap-2 p-3 md:p-4 mt-4 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors disabled:opacity-50 text-base md:text-lg"
+                >
+                  <RotateCcw className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
+                  <span className="font-semibold">Reset Simulation</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+              <h2 className="text-xl font-bold mb-4">Microscopic Legend</h2>
+              <div className="flex flex-col gap-5 text-sm md:text-base">
+                
+                {/* Solid Legend */}
+                <div className="flex items-center gap-3">
+                  <div className={`flex items-center justify-center relative ${solidType === 'Cu(OH)2' || solidType === 'Cu(HCO3)2' ? 'w-20' : 'w-14'} h-8 shrink-0`}>
+                    {getParticleLabel(solidType, false, 0)}
+                  </div>
+                  <span className="font-medium leading-tight">{getSolidString()}(s)<br/><span className="text-xs text-slate-500 font-normal">{solidType === 'Cu(HCO3)2' ? 'Soluble Reactant' : 'Solid Reactant'}</span></span>
+                </div>
+
+                {/* Desired Product Group Legend */}
+                <div className="flex items-center gap-3">
+                  <div className={`w-[80px] ${acidType === 'H2SO4' ? 'blob-shape-blue border-blue-400 bg-blue-50' : 'blob-shape-teal border-teal-400 bg-teal-50'} border-[3px] border-dashed rounded-lg p-2 flex justify-center shrink-0`}>
+                     <span className={`text-[9px] font-bold ${acidType === 'H2SO4' ? 'text-blue-800' : 'text-teal-800'} text-center leading-tight`}>{getSaltString()}<br/>Mobile Ions</span>
+                  </div>
+                  <span className={`font-medium ${acidType === 'H2SO4' ? 'text-blue-800' : 'text-teal-800'} leading-tight`}>Formula unit<br/><span className={`text-xs ${acidType === 'H2SO4' ? 'text-blue-500/80' : 'text-teal-600'} font-normal`}>Desired Product</span></span>
+                </div>
+                
+                {/* Crystal Legend */}
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center relative w-14 h-12 shrink-0">
+                    <div className={`w-8 h-8 ${acidType === 'H2SO4' ? 'bg-blue-600 border-blue-800' : 'bg-teal-600 border-teal-800'} rounded-md rotate-45 flex items-center justify-center border-[2px] shadow-sm`}>
+                       <span className="-rotate-45 text-[8px] font-bold text-white text-center leading-none">{getSaltString()}</span>
+                    </div>
+                  </div>
+                  <span className="font-medium leading-tight">{getSaltString()}(s)<br/><span className="text-xs text-slate-500 font-normal">Salt Crystal</span></span>
+                </div>
+
+                {/* Contaminant Legend */}
+                <div className="flex items-center gap-3">
+                  <div className="w-[80px] blob-shape-red border-[3px] border-dashed border-red-500 bg-red-50 rounded-lg p-2 flex justify-center shrink-0">
+                     <span className="text-[9px] font-bold text-red-700 text-center leading-tight">{getAcidString()}<br/>Mobile Ions</span>
+                  </div>
+                  <span className="font-medium text-red-700 leading-tight">Contaminant<br/><span className="text-xs text-red-500/80 font-normal">Excess Acid</span></span>
+                </div>
+
+                {/* Gas Legend (Only if Carbonate) */}
+                {(solidType === 'CuCO3' || solidType === 'Cu(HCO3)2') && (
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full border border-slate-300 bg-white shadow-sm flex items-center justify-center text-slate-600 font-bold text-[10px] shrink-0">CO₂</div>
+                    <span className="font-medium">CO₂(g)<br/><span className="text-xs text-slate-500 font-normal">Escaping Gas</span></span>
+                  </div>
+                )}
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
