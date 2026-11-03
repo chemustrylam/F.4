@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>HKDSE Chemistry Ch.13 — Comparison Between Rust and Aluminium Oxide | CheMUSTry🧪</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -12,11 +14,21 @@
             font-family: 'Inter', sans-serif;
             background-color: #f8fafc;
             color: #1e293b;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        button, input, .blank-box {
+            touch-action: manipulation;
         }
         canvas {
             display: block;
             width: 100%;
             height: 100%;
+            touch-action: manipulation;
+            cursor: pointer;
+        }
+        button {
+            touch-action: manipulation;
         }
         .light-card {
             background: #ffffff;
@@ -145,7 +157,7 @@
             </div>
 
             <!-- Dual Simulation Canvases -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 
                 <!-- LEFT CARD: IRON (DESTRUCTIVE RUSTING) -->
                 <div class="light-card rounded-2xl overflow-hidden flex flex-col border-2 border-amber-300">
@@ -188,7 +200,7 @@
                     </div>
 
                     <!-- Canvas Wrapper -->
-                    <div class="relative h-80 sm:h-96 bg-sky-50">
+                    <div class="relative h-72 sm:h-80 md:h-96 bg-sky-50 cursor-pointer" onclick="flakeRustNow()" title="Tap canvas to drop loose rust!">
                         <canvas id="canvas-iron"></canvas>
                     </div>
 
@@ -258,7 +270,7 @@
                     </div>
 
                     <!-- Canvas Wrapper -->
-                    <div class="relative h-80 sm:h-96 bg-sky-50">
+                    <div class="relative h-72 sm:h-80 md:h-96 bg-sky-50 cursor-pointer" onclick="testAlAdhesion()" title="Tap canvas to test Al₂O₃ adhesion!">
                         <canvas id="canvas-aluminium"></canvas>
                     </div>
 
@@ -315,7 +327,7 @@
                     </div>
                 </div>
 
-                <div class="relative h-96 md:h-[440px] bg-white rounded-2xl overflow-hidden border-2 border-slate-200">
+                <div class="relative h-80 sm:h-96 md:h-[420px] bg-white rounded-2xl overflow-hidden border-2 border-slate-200 cursor-pointer" onclick="flakeMacroRustNow()" title="Tap canvas to flake & drop rust!">
                     <canvas id="canvas-macro"></canvas>
                 </div>
             </div>
@@ -450,6 +462,21 @@
     </main>
 
     <script>
+        // Polyfill for roundRect to ensure compatibility on all iPad Safari and Laptop browsers
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+                const radius = typeof r === 'number' ? r : (Array.isArray(r) ? r[0] : 4);
+                const rad = Math.min(radius, w / 2, h / 2);
+                this.moveTo(x + rad, y);
+                this.arcTo(x + w, y, x + w, y + h, rad);
+                this.arcTo(x + w, y + h, x, y + h, rad);
+                this.arcTo(x, y + h, x, y, rad);
+                this.arcTo(x, y, x + w, y, rad);
+                this.closePath();
+                return this;
+            };
+        }
+
         // =========================================================================
         // GLOBAL STATE & SIMULATION PARAMETERS
         // =========================================================================
@@ -1751,12 +1778,18 @@
         }
 
         window.addEventListener('resize', resizeCanvases);
+        window.addEventListener('orientationchange', () => setTimeout(resizeCanvases, 120));
 
         window.onload = function () {
             resizeCanvases();
             initGrids();
             resetMacroSim();
             toggleAllTableBlanks(false); // Ensure all worksheet blanks start hidden
+
+            // Support both Laptop mouse clicks and iPad touch taps directly on the canvases
+            canvasIron.addEventListener('click', flakeRustNow);
+            canvasAl.addEventListener('click', testAlAdhesion);
+
             animate();
         };
     </script>
