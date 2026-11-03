@@ -47,9 +47,18 @@
             cursor: pointer;
             transition: all 0.2s ease;
             border-bottom: 2px dashed #2563eb;
+            display: inline-block;
+            border-radius: 4px;
         }
         .blank-box:hover {
             background-color: #dbeafe;
+        }
+        .blank-hidden,
+        .blank-hidden * {
+            color: transparent !important;
+            background-color: #dbeafe !important;
+            border-color: #2563eb !important;
+            user-select: none !important;
         }
     </style>
 </head>
@@ -74,13 +83,16 @@
             <!-- View Switcher Tabs -->
             <div class="flex flex-wrap items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
                 <button onclick="setViewMode('split')" id="tab-split" class="tab-active px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-columns"></i> 1. Side-by-Side Simulation
+                    <i class="fa-solid fa-columns"></i>
+                    <span>1. Side-by-Side Simulation</span>
                 </button>
                 <button onclick="setViewMode('macro')" id="tab-macro" class="px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-arrows-to-circle"></i> 2. Whole-Block O<sub>2</sub> Attack Diagram
+                    <i class="fa-solid fa-arrows-to-circle"></i>
+                    <span>2. Whole-Block O<sub>2</sub> Attack Diagram</span>
                 </button>
                 <button onclick="setViewMode('table')" id="tab-table" class="px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-table-list"></i> 3. Worksheet Comparison Table
+                    <i class="fa-solid fa-table-list"></i>
+                    <span>3. Worksheet Comparison Table</span>
                 </button>
             </div>
         </div>
@@ -101,7 +113,7 @@
                         <i class="fa-solid fa-pause" id="play-icon"></i> <span id="play-text">Pause</span>
                     </button>
                     <button onclick="resetSimulation()" class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold text-sm flex items-center gap-2 transition">
-                        <i class="fa-solid fa-rotate-left"></i> Reset Fresh Metals
+                        <i class="fa-solid fa-rotate-left"></i> <span>Reset Fresh Metals</span>
                     </button>
                     <div class="h-6 w-px bg-slate-300 mx-1 hidden sm:block"></div>
                     <div class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
@@ -184,7 +196,8 @@
                     <div class="p-4 bg-white border-t border-slate-200 flex flex-col gap-3 flex-1 justify-between">
                         <div class="flex flex-wrap gap-2">
                             <button onclick="flakeRustNow()" class="flex-1 py-2.5 px-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-arrow-down-long"></i> Drop Loose Rust Now (Gravity)
+                                <i class="fa-solid fa-arrow-down-long"></i>
+                                <span>Drop Loose Rust Now (Gravity)</span>
                             </button>
                             <button onclick="toggleAutoFlake()" id="btn-auto-flake" class="py-2.5 px-3 rounded-xl bg-amber-100 border border-amber-300 text-amber-900 hover:bg-amber-200 font-bold text-xs sm:text-sm transition">
                                 Auto-Drop: ON
@@ -253,10 +266,12 @@
                     <div class="p-4 bg-white border-t border-slate-200 flex flex-col gap-3 flex-1 justify-between">
                         <div class="flex flex-wrap gap-2">
                             <button onclick="testAlAdhesion()" class="flex-1 py-2.5 px-3 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-hammer"></i> Try to Flake Off Al<sub>2</sub>O<sub>3</sub>
+                                <i class="fa-solid fa-hammer"></i>
+                                <span>Try to Flake Off Al<sub>2</sub>O<sub>3</sub></span>
                             </button>
                             <button onclick="toggleAnodization()" id="btn-anodize" class="flex-1 py-2.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-bolt"></i> Thicken by Anodization
+                                <i class="fa-solid fa-bolt"></i>
+                                <span>Thicken by Anodization</span>
                             </button>
                         </div>
 
@@ -278,22 +293,24 @@
 
         <!-- ========================================================= -->
         <!-- VIEW 2: MACROSCOPIC WHOLE-BLOCK O2 ATTACK DIAGRAM         -->
-        <!-- (Matches the bottom diagram in the uploaded worksheet)    -->
+        <!-- (Iron on Left, Aluminium on Right for Consistency)        -->
         <!-- ========================================================= -->
         <section id="view-macro" class="hidden flex-col gap-4">
             <div class="light-card rounded-2xl p-5">
                 <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
                     <div>
                         <span class="text-xs font-bold uppercase tracking-wider text-blue-700">Textbook Figure 13.20 Interactive Demonstration</span>
-                        <h2 class="text-xl font-extrabold text-slate-900">Whole Metal Block Attacked by Air (Aluminium vs. Iron)</h2>
-                        <p class="text-sm text-slate-600">Compare how Al forms a closely bound protective Al<sub>2</sub>O<sub>3</sub> layer while Fe forms porous rust (Fe<sub>2</sub>O<sub>3</sub>·<i>n</i>H<sub>2</sub>O) that flakes off and drops to the ground.</p>
+                        <h2 class="text-xl font-extrabold text-slate-900">Whole Metal Block Attacked by Air &amp; Water (Iron vs. Aluminium)</h2>
+                        <p class="text-sm text-slate-600">Compare how Fe (left) forms porous rust (Fe<sub>2</sub>O<sub>3</sub>·<i>n</i>H<sub>2</sub>O) that flakes off and drops to the ground, while Al (right) forms a closely bound protective Al<sub>2</sub>O<sub>3</sub> layer.</p>
                     </div>
                     <div class="flex flex-wrap gap-2">
                         <button onclick="flakeMacroRustNow()" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm flex items-center gap-2 shadow-sm transition">
-                            <i class="fa-solid fa-arrow-down-long"></i> Flake &amp; Drop Rust Now
+                            <i class="fa-solid fa-arrow-down-long"></i>
+                            <span>Flake &amp; Drop Rust Now</span>
                         </button>
                         <button onclick="resetMacroSim()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm flex items-center gap-2 shadow-sm transition">
-                            <i class="fa-solid fa-rotate"></i> Replay Animation
+                            <i class="fa-solid fa-rotate"></i>
+                            <span>Replay Animation</span>
                         </button>
                     </div>
                 </div>
@@ -306,19 +323,20 @@
 
         <!-- ========================================================= -->
         <!-- VIEW 3: INTERACTIVE WORKSHEET COMPARISON TABLE            -->
-        <!-- (Matches the exact table in image_966066.png)             -->
+        <!-- (All keywords start HIDDEN by default so answers aren't   -->
+        <!--  leaked when opening the tab in front of students!)       -->
         <!-- ========================================================= -->
         <section id="view-table" class="hidden flex-col gap-4">
             <div class="light-card rounded-2xl p-5">
                 <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
                     <div>
-                        <span class="text-xs font-bold uppercase tracking-wider text-sky-700">Classroom Worksheet Mode</span>
+                        <span class="text-xs font-bold uppercase tracking-wider text-sky-700">Classroom Worksheet Mode (Answers Hidden by Default)</span>
                         <h2 class="text-xl font-extrabold text-slate-900">Comparison between rust and aluminium oxide</h2>
-                        <p class="text-xs sm:text-sm text-slate-600">Click any underlined keyword to hide or reveal it for classroom questioning!</p>
+                        <p class="text-xs sm:text-sm text-slate-600">Click any blue blank box to reveal that keyword one by one, or use the buttons on the right!</p>
                     </div>
                     <div class="flex gap-2">
                         <button onclick="toggleAllTableBlanks(false)" class="px-3.5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold text-xs sm:text-sm transition">
-                            <i class="fa-solid fa-eye-slash mr-1"></i> Hide Keywords (Quiz Mode)
+                            <i class="fa-solid fa-eye-slash mr-1"></i> Hide All Keywords
                         </button>
                         <button onclick="toggleAllTableBlanks(true)" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm transition shadow-sm">
                             <i class="fa-solid fa-eye mr-1"></i> Reveal All Answers
@@ -344,10 +362,10 @@
                             <tr>
                                 <td class="p-3.5 font-bold border-r-2 border-slate-800 bg-slate-50">Nature</td>
                                 <td class="p-3.5 border-r-2 border-slate-800 font-semibold">
-                                    <span onclick="toggleBlank(this)" data-ans="Fe<sub>2</sub>O<sub>3</sub> · <i>n</i>H<sub>2</sub>O" class="blank-box px-1 font-bold">Fe<sub>2</sub>O<sub>3</sub> · <i>n</i>H<sub>2</sub>O</span>
+                                    <span onclick="toggleBlank(this)" data-hidden="true" data-ans="Fe<sub>2</sub>O<sub>3</sub> · <i>n</i>H<sub>2</sub>O" class="blank-box blank-hidden px-1 font-bold">Fe<sub>2</sub>O<sub>3</sub> · <i>n</i>H<sub>2</sub>O</span>
                                 </td>
                                 <td class="p-3.5 font-semibold">
-                                    <span onclick="toggleBlank(this)" data-ans="Al<sub>2</sub>O<sub>3</sub>" class="blank-box px-1 font-bold">Al<sub>2</sub>O<sub>3</sub></span>
+                                    <span onclick="toggleBlank(this)" data-hidden="true" data-ans="Al<sub>2</sub>O<sub>3</sub>" class="blank-box blank-hidden px-1 font-bold">Al<sub>2</sub>O<sub>3</sub></span>
                                 </td>
                             </tr>
                             <!-- Row 2: Chemical Equations -->
@@ -357,20 +375,20 @@
                                     <div class="font-bold">Overall equation of rusting:</div>
                                     <div class="font-medium">
                                         4Fe(s) + 3O<sub>2</sub>(g) + 2<i>n</i>H<sub>2</sub>O(l) &rarr;
-                                        <span onclick="toggleBlank(this)" data-ans="2Fe<sub>2</sub>O<sub>3</sub>·<i>n</i>H<sub>2</sub>O(s)" class="blank-box highlight-yellow">2Fe<sub>2</sub>O<sub>3</sub>·<i>n</i>H<sub>2</sub>O(s)</span>
+                                        <span onclick="toggleBlank(this)" data-hidden="true" data-ans="2Fe<sub>2</sub>O<sub>3</sub>·<i>n</i>H<sub>2</sub>O(s)" class="blank-box blank-hidden highlight-yellow">2Fe<sub>2</sub>O<sub>3</sub>·<i>n</i>H<sub>2</sub>O(s)</span>
                                     </div>
                                 </td>
                                 <td class="p-3.5 space-y-2">
                                     <div>
                                         <div class="font-bold">Oxidation of Al:</div>
                                         <div class="font-medium">
-                                            4Al(s) + 3O<sub>2</sub>(g) &rarr; 2<span onclick="toggleBlank(this)" data-ans="Al<sub>2</sub>O<sub>3</sub>" class="blank-box highlight-yellow">Al<sub>2</sub>O<sub>3</sub></span>(s)
+                                            4Al(s) + 3O<sub>2</sub>(g) &rarr; 2<span onclick="toggleBlank(this)" data-hidden="true" data-ans="Al<sub>2</sub>O<sub>3</sub>" class="blank-box blank-hidden highlight-yellow">Al<sub>2</sub>O<sub>3</sub></span>(s)
                                         </div>
                                     </div>
                                     <div>
                                         <div class="font-bold">Thickening of the oxide layer (Anodization) :</div>
                                         <div class="font-medium">
-                                            2Al(s) + 3H<sub>2</sub>O(l) &rarr; <span onclick="toggleBlank(this)" data-ans="Al<sub>2</sub>O<sub>3</sub>(s)" class="blank-box highlight-yellow">Al<sub>2</sub>O<sub>3</sub>(s)</span> + 3H<sub>2</sub>(g)
+                                            2Al(s) + 3H<sub>2</sub>O(l) &rarr; <span onclick="toggleBlank(this)" data-hidden="true" data-ans="Al<sub>2</sub>O<sub>3</sub>(s)" class="blank-box blank-hidden highlight-yellow">Al<sub>2</sub>O<sub>3</sub>(s)</span> + 3H<sub>2</sub>(g)
                                         </div>
                                     </div>
                                 </td>
@@ -379,20 +397,20 @@
                             <tr>
                                 <td class="p-3.5 font-bold border-r-2 border-slate-800 bg-slate-50">Permeability</td>
                                 <td class="p-3.5 border-r-2 border-slate-800">
-                                    <span onclick="toggleBlank(this)" data-ans="permeable" class="blank-box font-bold text-amber-800 px-1">permeable</span> to both air and water
+                                    <span onclick="toggleBlank(this)" data-hidden="true" data-ans="permeable" class="blank-box blank-hidden font-bold text-amber-800 px-1">permeable</span> to both air and water
                                 </td>
                                 <td class="p-3.5">
-                                    <span onclick="toggleBlank(this)" data-ans="impermeable" class="blank-box font-bold text-emerald-800 px-1">impermeable</span> to both air and water
+                                    <span onclick="toggleBlank(this)" data-hidden="true" data-ans="impermeable" class="blank-box blank-hidden font-bold text-emerald-800 px-1">impermeable</span> to both air and water
                                 </td>
                             </tr>
                             <!-- Row 4: Porous or not -->
                             <tr>
                                 <td class="p-3.5 font-bold border-r-2 border-slate-800 bg-slate-50">Porous or not</td>
                                 <td class="p-3.5 border-r-2 border-slate-800">
-                                    <span onclick="toggleBlank(this)" data-ans="porous and loosely bound" class="blank-box font-bold text-amber-800 px-1">porous and loosely bound</span> to the metal
+                                    <span onclick="toggleBlank(this)" data-hidden="true" data-ans="porous and loosely bound" class="blank-box blank-hidden font-bold text-amber-800 px-1">porous and loosely bound</span> to the metal
                                 </td>
                                 <td class="p-3.5">
-                                    <span onclick="toggleBlank(this)" data-ans="hard, closely bound" class="blank-box highlight-grey">hard, closely bound</span> to the metal
+                                    <span onclick="toggleBlank(this)" data-hidden="true" data-ans="hard, closely bound" class="blank-box blank-hidden highlight-grey">hard, closely bound</span> to the metal
                                 </td>
                             </tr>
                             <!-- Row 5: Protection -->
@@ -401,15 +419,15 @@
                                 <td class="p-3.5 border-r-2 border-slate-800 space-y-2">
                                     <div class="font-bold text-slate-900">Not protected</div>
                                     <ul class="list-disc list-inside space-y-1">
-                                        <li>This layer is <span onclick="toggleBlank(this)" data-ans="permeable" class="blank-box font-bold">permeable</span> to <strong>air</strong> and <strong>water</strong> as it is porous.</li>
-                                        <li>The iron(III) oxide layer <span onclick="toggleBlank(this)" data-ans="flakes off easily" class="blank-box font-bold">flakes off easily</span>.</li>
+                                        <li>This layer is <span onclick="toggleBlank(this)" data-hidden="true" data-ans="permeable" class="blank-box blank-hidden font-bold px-1">permeable</span> to <strong>air</strong> and <strong>water</strong> as it is porous.</li>
+                                        <li>The iron(III) oxide layer <span onclick="toggleBlank(this)" data-hidden="true" data-ans="flakes off easily" class="blank-box blank-hidden font-bold px-1">flakes off easily</span>.</li>
                                     </ul>
                                 </td>
                                 <td class="p-3.5 space-y-2">
                                     <div class="font-bold text-slate-900">Further protected</div>
                                     <ul class="list-disc list-inside space-y-1">
-                                        <li>This layer is <span onclick="toggleBlank(this)" data-ans="impermeable" class="blank-box font-bold">impermeable</span> to <strong>air</strong> and <strong>water</strong>.</li>
-                                        <li>The aluminium oxide layer <span onclick="toggleBlank(this)" data-ans="firmly adheres" class="blank-box font-bold">firmly adheres</span> to its surface.</li>
+                                        <li>This layer is <span onclick="toggleBlank(this)" data-hidden="true" data-ans="impermeable" class="blank-box blank-hidden font-bold px-1">impermeable</span> to <strong>air</strong> and <strong>water</strong>.</li>
+                                        <li>The aluminium oxide layer <span onclick="toggleBlank(this)" data-hidden="true" data-ans="firmly adheres" class="blank-box blank-hidden font-bold px-1">firmly adheres</span> to its surface.</li>
                                     </ul>
                                 </td>
                             </tr>
@@ -417,10 +435,10 @@
                             <tr>
                                 <td class="p-3.5 font-bold border-r-2 border-slate-800 bg-slate-50">Result</td>
                                 <td class="p-3.5 border-r-2 border-slate-800">
-                                    &there4; New surface of iron then exposes to air and water and rusts <span onclick="toggleBlank(this)" data-ans="more seriously" class="blank-box font-bold text-red-700">more seriously</span>.
+                                    &there4; New surface of iron then exposes to air and water and rusts <span onclick="toggleBlank(this)" data-hidden="true" data-ans="more seriously" class="blank-box blank-hidden font-bold text-red-700 px-1">more seriously</span>.
                                 </td>
                                 <td class="p-3.5">
-                                    &there4; Can <span onclick="toggleBlank(this)" data-ans="protect" class="blank-box font-bold text-emerald-700">protect</span> the aluminium underneath from further corrosion.
+                                    &there4; Can <span onclick="toggleBlank(this)" data-hidden="true" data-ans="protect" class="blank-box blank-hidden font-bold text-emerald-700 px-1">protect</span> the aluminium underneath from further corrosion.
                                 </td>
                             </tr>
                         </tbody>
@@ -689,12 +707,12 @@
             const badge = document.getElementById('al-layer-badge');
 
             if (isAnodized) {
-                btn.innerHTML = '<i class="fa-solid fa-check-circle"></i> Anodized (Thick Layer ON)';
+                btn.innerHTML = '<i class="fa-solid fa-check-circle"></i> <span>Anodized (Thick Layer ON)</span>';
                 btn.className = 'flex-1 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-2';
                 eq.innerHTML = 'Anodization: 2Al(s) + 3H<sub>2</sub>O(l) &rarr; <span class="highlight-yellow">Al<sub>2</sub>O<sub>3</sub>(s)</span> + 3H<sub>2</sub>(g)';
                 badge.innerHTML = 'Thick Anodized Al<sub>2</sub>O<sub>3</sub>';
             } else {
-                btn.innerHTML = '<i class="fa-solid fa-bolt"></i> Thicken by Anodization';
+                btn.innerHTML = '<i class="fa-solid fa-bolt"></i> <span>Thicken by Anodization</span>';
                 btn.className = 'flex-1 py-2.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-2';
                 eq.innerHTML = '4Al(s) + 3O<sub>2</sub>(g) &rarr; <span class="highlight-yellow">2Al<sub>2</sub>O<sub>3</sub>(s)</span>';
                 badge.textContent = 'Thin Natural Oxide';
@@ -911,7 +929,7 @@
                 ctxIron.strokeStyle = '#ea580c';
                 ctxIron.lineWidth = 1.2;
                 ctxIron.beginPath();
-                ctxIron.roundRect(-f.w / 2, -f.h / 2, f.w, f.h, 4);
+                ctxIron.roundRect(-f.w / 2, -f.h / 2, f.w, ff_h(f), 4);
                 ctxIron.fill();
                 ctxIron.stroke();
                 ctxIron.restore();
@@ -1001,6 +1019,10 @@
             ctxIron.font = 'bold 11px Inter';
             ctxIron.textAlign = 'center';
             ctxIron.fillText('⬇ GROUND FLOOR — Fallen Porous Rust (Fe₂O₃·nH₂O) Piles Up Here', w / 2, h - 11);
+        }
+
+        function ff_h(f) {
+            return f.h;
         }
 
         // =========================================================================
@@ -1248,6 +1270,7 @@
 
         // =========================================================================
         // 3. MACROSCOPIC WHOLE-BLOCK O2 ATTACK DIAGRAM (TAB 2)
+        // (Left: Iron [Fe] | Right: Aluminium [Al] for consistency)
         // =========================================================================
         function resetMacroSim() {
             macroAlOxideProgress = 0;
@@ -1287,7 +1310,6 @@
         function getPerimeterPoint(cx, cy, halfW, halfH, angle) {
             const cos = Math.cos(angle);
             const sin = Math.sin(angle);
-            // Superellipse (n=2.8) closely matches the textbook rounded block shape
             const exp = 2.8;
             const r = 1 / Math.pow(
                 Math.pow(Math.abs(cos) / Math.max(20, halfW), exp) +
@@ -1300,11 +1322,11 @@
             };
         }
 
-        // Manual button in Tab 2 to flake & drop all current rust around the Whole Iron Block
+        // Manual button in Tab 2 to flake & drop all current rust around the Whole Iron Block (on Left Side)
         function flakeMacroRustNow() {
             const w = canvasMacro.width || 900;
             const h = canvasMacro.height || 430;
-            const feCenterX = w * 0.75;
+            const feCenterX = w * 0.25; // Iron on Left Hand Side
             const feCenterY = h * 0.47;
             const baseW = Math.min(185, w * 0.31);
             const baseH = 96;
@@ -1374,77 +1396,15 @@
             const baseH = 96;
 
             // =================================================================
-            // LEFT HALF: ALUMINIUM WHOLE-BLOCK DIAGRAM (Protected by Al2O3)
+            // LEFT HALF: IRON WHOLE-BLOCK DIAGRAM (Rust Flakes & Drops Off!)
             // =================================================================
-            const alCenterX = w * 0.25;
-            const alCenterY = h * 0.47;
-
-            ctxMacro.fillStyle = '#6b21a8';
-            ctxMacro.font = 'bold 14px Inter';
-            ctxMacro.textAlign = 'center';
-            ctxMacro.fillText('Aluminium Block Attacked by Oxygen in Air', alCenterX, 26);
-
-            // Pure Aluminium block
-            const alGrad = ctxMacro.createLinearGradient(
-                alCenterX - baseW / 2, alCenterY - baseH / 2,
-                alCenterX + baseW / 2, alCenterY + baseH / 2
-            );
-            alGrad.addColorStop(0, '#f1f5f9');
-            alGrad.addColorStop(0.5, '#cbd5e1');
-            alGrad.addColorStop(1, '#94a3b8');
-            ctxMacro.fillStyle = alGrad;
-            ctxMacro.strokeStyle = '#64748b';
-            ctxMacro.lineWidth = 1.5;
-            ctxMacro.beginPath();
-            ctxMacro.roundRect(alCenterX - baseW / 2, alCenterY - baseH / 2, baseW, baseH, 22);
-            ctxMacro.fill();
-            ctxMacro.stroke();
-
-            // Impermeable, closely bound protective oxide ring (Al2O3)
-            if (macroAlOxideProgress > 0.05) {
-                ctxMacro.strokeStyle = `rgba(147, 51, 234, ${macroAlOxideProgress})`;
-                ctxMacro.lineWidth = 6;
-                ctxMacro.beginPath();
-                ctxMacro.roundRect(alCenterX - baseW / 2 - 2, alCenterY - baseH / 2 - 2, baseW + 4, baseH + 4, 24);
-                ctxMacro.stroke();
-
-                // Pointer label matching worksheet diagram
-                ctxMacro.strokeStyle = '#7e22ce';
-                ctxMacro.lineWidth = 1.5;
-                ctxMacro.beginPath();
-                ctxMacro.moveTo(alCenterX + baseW * 0.22, alCenterY - baseH / 2 - 4);
-                ctxMacro.lineTo(alCenterX + baseW * 0.32, alCenterY - baseH / 2 - 26);
-                ctxMacro.stroke();
-
-                ctxMacro.fillStyle = '#6b21a8';
-                ctxMacro.font = 'bold 11px Inter';
-                ctxMacro.fillText('Protective Al₂O₃ layer (impermeable & firmly adheres)', alCenterX + baseW * 0.12, alCenterY - baseH / 2 - 32);
-            }
-
-            ctxMacro.fillStyle = '#1e293b';
-            ctxMacro.font = 'bold 16px Inter';
-            ctxMacro.fillText('aluminium (Al)', alCenterX, alCenterY);
-
-            ctxMacro.fillStyle = '#047857';
-            ctxMacro.font = 'bold 12px Inter';
-            ctxMacro.fillText(
-                macroAlOxideProgress < 0.85
-                    ? 'Surface attacked by oxygen of the air...'
-                    : '🛡️ Al₂O₃ does NOT flake off — Al underneath is protected!',
-                alCenterX,
-                floorY + 25
-            );
-
-            // =================================================================
-            // RIGHT HALF: IRON WHOLE-BLOCK DIAGRAM (Rust Flakes & Drops Off!)
-            // =================================================================
-            const feCenterX = w * 0.75;
+            const feCenterX = w * 0.25;
             const feCenterY = h * 0.47;
 
             ctxMacro.fillStyle = '#9a3412';
             ctxMacro.font = 'bold 14px Inter';
             ctxMacro.textAlign = 'center';
-            ctxMacro.fillText('Iron Block Attacked by Air & Water (Rust Flakes & Drops)', feCenterX, 26);
+            ctxMacro.fillText('Part 1: Iron Block Attacked by Air & Water (Rust Flakes & Drops)', feCenterX, 26);
 
             // Dashed outline showing original size of Iron block before rusting & flaking
             if (macroFeShrink > 2) {
@@ -1578,7 +1538,7 @@
                 const pileOffset = Math.min(16, (macroLandedFlakes.length % 28) * 0.5);
                 if (ff.y >= floorY - 4 - pileOffset) {
                     macroLandedFlakes.push({
-                        x: ff.x,
+                        x: Math.max(20, Math.min(w / 2 - 20, ff.x)),
                         y: floorY - 4 - pileOffset,
                         rot: ff.rot * 0.25,
                         w: ff.w,
@@ -1609,11 +1569,80 @@
             ctxMacro.fillText('❌ Fallen rust piles up on ground — new Fe surface rusts more seriously!', feCenterX, floorY + 25);
 
             // =================================================================
+            // RIGHT HALF: ALUMINIUM WHOLE-BLOCK DIAGRAM (Protected by Al2O3)
+            // =================================================================
+            const alCenterX = w * 0.75;
+            const alCenterY = h * 0.47;
+
+            ctxMacro.fillStyle = '#6b21a8';
+            ctxMacro.font = 'bold 14px Inter';
+            ctxMacro.textAlign = 'center';
+            ctxMacro.fillText('Part 2: Aluminium Block Attacked by Oxygen in Air', alCenterX, 26);
+
+            // Pure Aluminium block
+            const alGrad = ctxMacro.createLinearGradient(
+                alCenterX - baseW / 2, alCenterY - baseH / 2,
+                alCenterX + baseW / 2, alCenterY + baseH / 2
+            );
+            alGrad.addColorStop(0, '#f1f5f9');
+            alGrad.addColorStop(0.5, '#cbd5e1');
+            alGrad.addColorStop(1, '#94a3b8');
+            ctxMacro.fillStyle = alGrad;
+            ctxMacro.strokeStyle = '#64748b';
+            ctxMacro.lineWidth = 1.5;
+            ctxMacro.beginPath();
+            ctxMacro.roundRect(alCenterX - baseW / 2, alCenterY - baseH / 2, baseW, baseH, 22);
+            ctxMacro.fill();
+            ctxMacro.stroke();
+
+            // Impermeable, closely bound protective oxide ring (Al2O3)
+            if (macroAlOxideProgress > 0.05) {
+                ctxMacro.strokeStyle = `rgba(147, 51, 234, ${macroAlOxideProgress})`;
+                ctxMacro.lineWidth = 6;
+                ctxMacro.beginPath();
+                ctxMacro.roundRect(alCenterX - baseW / 2 - 2, alCenterY - baseH / 2 - 2, baseW + 4, baseH + 4, 24);
+                ctxMacro.stroke();
+
+                // Pointer label matching worksheet diagram
+                ctxMacro.strokeStyle = '#7e22ce';
+                ctxMacro.lineWidth = 1.5;
+                ctxMacro.beginPath();
+                ctxMacro.moveTo(alCenterX + baseW * 0.15, alCenterY - baseH / 2 - 4);
+                ctxMacro.lineTo(alCenterX + baseW * 0.25, alCenterY - baseH / 2 - 26);
+                ctxMacro.stroke();
+
+                ctxMacro.fillStyle = '#6b21a8';
+                ctxMacro.font = 'bold 11px Inter';
+                ctxMacro.fillText('Protective Al₂O₃ layer (impermeable & firmly adheres)', alCenterX, alCenterY - baseH / 2 - 32);
+            }
+
+            ctxMacro.fillStyle = '#1e293b';
+            ctxMacro.font = 'bold 16px Inter';
+            ctxMacro.fillText('aluminium (Al)', alCenterX, alCenterY);
+
+            ctxMacro.fillStyle = '#047857';
+            ctxMacro.font = 'bold 12px Inter';
+            ctxMacro.fillText(
+                macroAlOxideProgress < 0.85
+                    ? 'Surface attacked by oxygen of the air...'
+                    : '🛡️ Al₂O₃ does NOT flake off — Al underneath is protected!',
+                alCenterX,
+                floorY + 25
+            );
+
+            // =================================================================
             // ANIMATE O2 & H2O MOLECULES ATTACKING BOTH BLOCKS
             // =================================================================
             macroO2.forEach(m => {
                 if (isPlaying) {
-                    // Aluminium side: O2 moves in and bounces off impermeable Al2O3
+                    // Iron side (Left): O2 and H2O seep right through porous rust to attack inner Fe
+                    m.distFe += m.dirFe * 1.0 * simSpeed;
+                    if (m.distFe <= -6) {
+                        m.distFe = 72;
+                        m.angleFe += (Math.random() - 0.5) * 0.35;
+                    }
+
+                    // Aluminium side (Right): O2 moves in and bounces off impermeable Al2O3
                     m.distAl += m.dirAl * 0.95 * simSpeed;
                     if (m.distAl <= 14) {
                         m.dirAl = 1;
@@ -1623,29 +1652,22 @@
                     if (m.distAl > 72) {
                         m.dirAl = -1;
                     }
-
-                    // Iron side: O2 and H2O seep right through porous rust to attack inner Fe
-                    m.distFe += m.dirFe * 1.0 * simSpeed;
-                    if (m.distFe <= -6) {
-                        m.distFe = 72;
-                        m.angleFe += (Math.random() - 0.5) * 0.35;
-                    }
                 }
 
-                // Draw O2 molecule on Aluminium side
-                const alSurf = getPerimeterPoint(alCenterX, alCenterY, baseW / 2, baseH / 2, m.angleAl);
-                const ax = alSurf.x + Math.cos(m.angleAl) * m.distAl;
-                const ay = alSurf.y + Math.sin(m.angleAl) * m.distAl;
-                if (ay < floorY - 8 && ay > 38) {
-                    drawMolecule(ctxMacro, ax, ay, 'O2', false);
-                }
-
-                // Draw O2 / H2O molecule on Iron side
+                // Draw O2 / H2O molecule on Iron side (Left)
                 const feSurf = getPerimeterPoint(feCenterX, feCenterY, curHalfW, curHalfH, m.angleFe);
                 const fx = feSurf.x + Math.cos(m.angleFe) * m.distFe;
                 const fy = feSurf.y + Math.sin(m.angleFe) * m.distFe;
-                if (fy < floorY - 8 && fy > 38) {
+                if (fy < floorY - 8 && fy > 38 && fx < w / 2 - 8) {
                     drawMolecule(ctxMacro, fx, fy, m.typeFe, m.distFe < 18);
+                }
+
+                // Draw O2 molecule on Aluminium side (Right)
+                const alSurf = getPerimeterPoint(alCenterX, alCenterY, baseW / 2, baseH / 2, m.angleAl);
+                const ax = alSurf.x + Math.cos(m.angleAl) * m.distAl;
+                const ay = alSurf.y + Math.sin(m.angleAl) * m.distAl;
+                if (ay < floorY - 8 && ay > 38 && ax > w / 2 + 8) {
+                    drawMolecule(ctxMacro, ax, ay, 'O2', false);
                 }
             });
 
@@ -1694,10 +1716,10 @@
             if (el.getAttribute('data-hidden') === 'true') {
                 el.innerHTML = ans;
                 el.setAttribute('data-hidden', 'false');
-                el.classList.remove('bg-blue-100', 'text-transparent', 'select-none');
+                el.classList.remove('blank-hidden');
             } else {
                 el.setAttribute('data-hidden', 'true');
-                el.classList.add('bg-blue-100', 'text-transparent', 'select-none');
+                el.classList.add('blank-hidden');
             }
         }
 
@@ -1707,10 +1729,10 @@
                 if (reveal) {
                     el.innerHTML = ans;
                     el.setAttribute('data-hidden', 'false');
-                    el.classList.remove('bg-blue-100', 'text-transparent', 'select-none');
+                    el.classList.remove('blank-hidden');
                 } else {
                     el.setAttribute('data-hidden', 'true');
-                    el.classList.add('bg-blue-100', 'text-transparent', 'select-none');
+                    el.classList.add('blank-hidden');
                 }
             });
         }
@@ -1734,6 +1756,7 @@
             resizeCanvases();
             initGrids();
             resetMacroSim();
+            toggleAllTableBlanks(false); // Ensure all worksheet blanks start hidden
             animate();
         };
     </script>
