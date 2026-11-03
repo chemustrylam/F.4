@@ -1,0 +1,1741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HKDSE Chemistry Ch.13 — Comparison Between Rust and Aluminium Oxide | CheMUSTry🧪</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        .light-card {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+        }
+        .highlight-yellow {
+            background-color: #fef08a;
+            color: #1e293b;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+            border: 1px solid #facc15;
+        }
+        .highlight-grey {
+            background-color: #e2e8f0;
+            color: #1e293b;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+        .tab-active {
+            background: #2563eb;
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+        }
+        .blank-box {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 2px dashed #2563eb;
+        }
+        .blank-box:hover {
+            background-color: #dbeafe;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800">
+
+    <!-- Top Navigation & Classroom Header (Light Theme) -->
+    <header class="bg-white border-b border-slate-200 px-4 py-3 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-sky-100 border border-sky-300 flex items-center justify-center shadow-sm">
+                    <i class="fa-solid fa-flask-vial text-sky-700 text-xl"></i>
+                </div>
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-sky-700">HKDSE Chemistry • Ch. 13.7 Corrosion of Metals</span>
+                    <h1 class="text-lg md:text-xl font-extrabold text-slate-900">
+                        Comparison Between Rust (Fe<sub>2</sub>O<sub>3</sub>·<i>n</i>H<sub>2</sub>O) &amp; Aluminium Oxide (Al<sub>2</sub>O<sub>3</sub>)
+                    </h1>
+                    <p class="text-sm font-bold text-sky-700 mt-0.5">CheMUSTry🧪</p>
+                </div>
+            </div>
+
+            <!-- View Switcher Tabs -->
+            <div class="flex flex-wrap items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                <button onclick="setViewMode('split')" id="tab-split" class="tab-active px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-columns"></i> 1. Side-by-Side Simulation
+                </button>
+                <button onclick="setViewMode('macro')" id="tab-macro" class="px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-arrows-to-circle"></i> 2. Whole-Block O<sub>2</sub> Attack Diagram
+                </button>
+                <button onclick="setViewMode('table')" id="tab-table" class="px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-table-list"></i> 3. Worksheet Comparison Table
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-3 md:p-5 flex flex-col gap-4">
+
+        <!-- ========================================================= -->
+        <!-- VIEW 1: SIDE-BY-SIDE MICROSCOPIC CROSS-SECTION SIMULATION -->
+        <!-- ========================================================= -->
+        <section id="view-split" class="flex flex-col gap-4">
+
+            <!-- Global Simulation Control Bar -->
+            <div class="light-card rounded-2xl p-3 md:p-4 flex flex-wrap items-center justify-between gap-4">
+                <div class="flex flex-wrap items-center gap-2">
+                    <button id="btn-play-pause" onclick="togglePlay()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm flex items-center gap-2 shadow-sm transition">
+                        <i class="fa-solid fa-pause" id="play-icon"></i> <span id="play-text">Pause</span>
+                    </button>
+                    <button onclick="resetSimulation()" class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold text-sm flex items-center gap-2 transition">
+                        <i class="fa-solid fa-rotate-left"></i> Reset Fresh Metals
+                    </button>
+                    <div class="h-6 w-px bg-slate-300 mx-1 hidden sm:block"></div>
+                    <div class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
+                        <span class="text-xs font-semibold text-slate-700">Speed:</span>
+                        <input type="range" id="speed-slider" min="0.5" max="2.5" step="0.5" value="1" class="w-20 accent-blue-600 cursor-pointer" oninput="updateSpeed(this.value)">
+                        <span id="speed-label" class="text-xs font-bold text-blue-700">1.0x</span>
+                    </div>
+                </div>
+
+                <!-- Particle Legend -->
+                <div class="flex flex-wrap items-center gap-4 text-xs bg-slate-100 px-3.5 py-2 rounded-xl border border-slate-200">
+                    <div class="flex items-center gap-1.5">
+                        <span class="inline-flex"><span class="w-3 h-3 rounded-full bg-red-500 border border-red-700 inline-block"></span><span class="w-3 h-3 rounded-full bg-red-500 border border-red-700 -ml-1 inline-block"></span></span>
+                        <span class="text-slate-800 font-semibold">Oxygen (O<sub>2</sub>)</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-3.5 h-3.5 rounded-full bg-sky-500 border border-sky-700 inline-block"></span>
+                        <span class="text-slate-800 font-semibold">Water (H<sub>2</sub>O)</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-3.5 h-3.5 rounded bg-amber-800 border border-amber-600 inline-block"></span>
+                        <span class="text-amber-900 font-semibold">Porous Rust (Fe<sub>2</sub>O<sub>3</sub>·<i>n</i>H<sub>2</sub>O)</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-3.5 h-3.5 rounded bg-purple-600 border border-purple-800 inline-block"></span>
+                        <span class="text-purple-900 font-semibold">Impermeable Al<sub>2</sub>O<sub>3</sub></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dual Simulation Canvases -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+                <!-- LEFT CARD: IRON (DESTRUCTIVE RUSTING) -->
+                <div class="light-card rounded-2xl overflow-hidden flex flex-col border-2 border-amber-300">
+                    <!-- Header -->
+                    <div class="bg-amber-50 p-4 border-b border-amber-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-red-100 text-red-700 border border-red-300">
+                                    ❌ NOT PROTECTED (Destructive)
+                                </span>
+                                <h2 class="text-xl font-extrabold text-amber-900 mt-1">
+                                    Part 1: Rust on Iron (Fe<sub>2</sub>O<sub>3</sub>·<i>n</i>H<sub>2</sub>O)
+                                </h2>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs font-semibold text-slate-600">Remaining Pure Fe</div>
+                                <div id="fe-percent" class="text-2xl font-black text-amber-700">100%</div>
+                            </div>
+                        </div>
+                        <!-- Progress bar -->
+                        <div class="w-full h-2.5 bg-amber-100 rounded-full overflow-hidden mt-2 border border-amber-300">
+                            <div id="fe-bar" class="h-full bg-gradient-to-r from-amber-500 to-red-500 transition-all duration-300" style="width: 100%"></div>
+                        </div>
+                        <!-- Chemical Equation -->
+                        <div class="mt-2.5 bg-white px-3 py-1.5 rounded-lg border border-amber-200 text-xs font-semibold text-slate-800 flex flex-wrap items-center justify-between gap-1">
+                            <span>4Fe(s) + 3O<sub>2</sub>(g) + 2<i>n</i>H<sub>2</sub>O(l) &rarr; <span class="highlight-yellow">2Fe<sub>2</sub>O<sub>3</sub>·<i>n</i>H<sub>2</sub>O(s)</span></span>
+                            <span class="text-amber-800 font-bold">Reddish-brown rust</span>
+                        </div>
+                    </div>
+
+                    <!-- Live Observation Banner (Unobstructed) -->
+                    <div class="bg-amber-50/90 border-b border-amber-200 px-4 py-2 text-xs flex items-start gap-2">
+                        <i class="fa-solid fa-circle-exclamation text-red-600 mt-0.5"></i>
+                        <div>
+                            <span class="font-bold text-amber-900">Live Observation (Iron on Ceiling): </span>
+                            <span id="iron-live-text" class="text-slate-700 font-medium">
+                                O<sub>2</sub> and H<sub>2</sub>O move freely in the air, seep through the porous rust to attack Fe, and loose rust drops to the ground due to gravity!
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Canvas Wrapper -->
+                    <div class="relative h-80 sm:h-96 bg-sky-50">
+                        <canvas id="canvas-iron"></canvas>
+                    </div>
+
+                    <!-- Interactive Action Bar & Key Teaching Points -->
+                    <div class="p-4 bg-white border-t border-slate-200 flex flex-col gap-3 flex-1 justify-between">
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="flakeRustNow()" class="flex-1 py-2.5 px-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-arrow-down-long"></i> Drop Loose Rust Now (Gravity)
+                            </button>
+                            <button onclick="toggleAutoFlake()" id="btn-auto-flake" class="py-2.5 px-3 rounded-xl bg-amber-100 border border-amber-300 text-amber-900 hover:bg-amber-200 font-bold text-xs sm:text-sm transition">
+                                Auto-Drop: ON
+                            </button>
+                        </div>
+
+                        <ul class="text-xs sm:text-sm space-y-1.5 text-slate-700 bg-amber-50/70 p-3 rounded-xl border border-amber-200">
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-angles-up text-amber-700 mt-1"></i>
+                                <span><strong class="text-slate-900">Permeable &amp; Porous:</strong> Rust has pores and cracks that allow <strong class="text-sky-700">air (O<sub>2</sub>) and water (H<sub>2</sub>O)</strong> in the air to pass through to inner Fe.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-arrow-down-wide-short text-red-600 mt-1"></i>
+                                <span><strong class="text-slate-900">Loosely Bound &amp; Drops Off:</strong> Rust falls to the ground under gravity, exposing a <strong class="text-amber-800">new surface of iron</strong> to rust <strong class="text-red-700 underline">more seriously</strong>!</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- RIGHT CARD: ALUMINIUM (PROTECTIVE OXIDE LAYER) -->
+                <div class="light-card rounded-2xl overflow-hidden flex flex-col border-2 border-purple-300">
+                    <!-- Header -->
+                    <div class="bg-purple-50 p-4 border-b border-purple-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                    🛡️ FURTHER PROTECTED (Protective)
+                                </span>
+                                <h2 class="text-xl font-extrabold text-purple-900 mt-1">
+                                    Part 2: Aluminium Oxide (Al<sub>2</sub>O<sub>3</sub>)
+                                </h2>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs font-semibold text-slate-600">Remaining Pure Al</div>
+                                <div id="al-percent" class="text-2xl font-black text-emerald-700">100%</div>
+                            </div>
+                        </div>
+                        <!-- Progress bar -->
+                        <div class="w-full h-2.5 bg-purple-100 rounded-full overflow-hidden mt-2 border border-purple-300">
+                            <div id="al-bar" class="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300" style="width: 100%"></div>
+                        </div>
+                        <!-- Chemical Equation -->
+                        <div class="mt-2.5 bg-white px-3 py-1.5 rounded-lg border border-purple-200 text-xs font-semibold text-slate-800 flex flex-wrap items-center justify-between gap-1">
+                            <span id="al-equation-display">4Al(s) + 3O<sub>2</sub>(g) &rarr; <span class="highlight-yellow">2Al<sub>2</sub>O<sub>3</sub>(s)</span></span>
+                            <span id="al-layer-badge" class="text-purple-800 font-bold">Thin Natural Oxide</span>
+                        </div>
+                    </div>
+
+                    <!-- Live Observation Banner (Unobstructed) -->
+                    <div class="bg-purple-50/90 border-b border-purple-200 px-4 py-2 text-xs flex items-start gap-2">
+                        <i class="fa-solid fa-shield-halved text-emerald-600 mt-0.5"></i>
+                        <div>
+                            <span class="font-bold text-purple-900">Live Observation: </span>
+                            <span id="al-live-text" class="text-slate-700 font-medium">
+                                When Al is exposed to air, a continuous layer of Al<sub>2</sub>O<sub>3</sub> quickly forms and blocks all O<sub>2</sub> &amp; H<sub>2</sub>O.
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Canvas Wrapper -->
+                    <div class="relative h-80 sm:h-96 bg-sky-50">
+                        <canvas id="canvas-aluminium"></canvas>
+                    </div>
+
+                    <!-- Interactive Action Bar & Key Teaching Points -->
+                    <div class="p-4 bg-white border-t border-slate-200 flex flex-col gap-3 flex-1 justify-between">
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="testAlAdhesion()" class="flex-1 py-2.5 px-3 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-hammer"></i> Try to Flake Off Al<sub>2</sub>O<sub>3</sub>
+                            </button>
+                            <button onclick="toggleAnodization()" id="btn-anodize" class="flex-1 py-2.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-bolt"></i> Thicken by Anodization
+                            </button>
+                        </div>
+
+                        <ul class="text-xs sm:text-sm space-y-1.5 text-slate-700 bg-purple-50/70 p-3 rounded-xl border border-purple-200">
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-ban text-emerald-600 mt-1"></i>
+                                <span><strong class="text-slate-900">Impermeable:</strong> Non-porous Al<sub>2</sub>O<sub>3</sub> blocks both <strong class="text-sky-700">air (O<sub>2</sub>) and water (H<sub>2</sub>O)</strong> from reaching the Al underneath.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-lock text-purple-700 mt-1"></i>
+                                <span><strong class="text-slate-900">Hard &amp; Closely Bound:</strong> Firmly adheres to the metal surface and does NOT flake off, <strong class="text-emerald-700 underline">protecting Al from further corrosion</strong>.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- VIEW 2: MACROSCOPIC WHOLE-BLOCK O2 ATTACK DIAGRAM         -->
+        <!-- (Matches the bottom diagram in the uploaded worksheet)    -->
+        <!-- ========================================================= -->
+        <section id="view-macro" class="hidden flex-col gap-4">
+            <div class="light-card rounded-2xl p-5">
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-blue-700">Textbook Figure 13.20 Interactive Demonstration</span>
+                        <h2 class="text-xl font-extrabold text-slate-900">Whole Metal Block Attacked by Air (Aluminium vs. Iron)</h2>
+                        <p class="text-sm text-slate-600">Compare how Al forms a closely bound protective Al<sub>2</sub>O<sub>3</sub> layer while Fe forms porous rust (Fe<sub>2</sub>O<sub>3</sub>·<i>n</i>H<sub>2</sub>O) that flakes off and drops to the ground.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="flakeMacroRustNow()" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm flex items-center gap-2 shadow-sm transition">
+                            <i class="fa-solid fa-arrow-down-long"></i> Flake &amp; Drop Rust Now
+                        </button>
+                        <button onclick="resetMacroSim()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm flex items-center gap-2 shadow-sm transition">
+                            <i class="fa-solid fa-rotate"></i> Replay Animation
+                        </button>
+                    </div>
+                </div>
+
+                <div class="relative h-96 md:h-[440px] bg-white rounded-2xl overflow-hidden border-2 border-slate-200">
+                    <canvas id="canvas-macro"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- VIEW 3: INTERACTIVE WORKSHEET COMPARISON TABLE            -->
+        <!-- (Matches the exact table in image_966066.png)             -->
+        <!-- ========================================================= -->
+        <section id="view-table" class="hidden flex-col gap-4">
+            <div class="light-card rounded-2xl p-5">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-sky-700">Classroom Worksheet Mode</span>
+                        <h2 class="text-xl font-extrabold text-slate-900">Comparison between rust and aluminium oxide</h2>
+                        <p class="text-xs sm:text-sm text-slate-600">Click any underlined keyword to hide or reveal it for classroom questioning!</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="toggleAllTableBlanks(false)" class="px-3.5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold text-xs sm:text-sm transition">
+                            <i class="fa-solid fa-eye-slash mr-1"></i> Hide Keywords (Quiz Mode)
+                        </button>
+                        <button onclick="toggleAllTableBlanks(true)" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm transition shadow-sm">
+                            <i class="fa-solid fa-eye mr-1"></i> Reveal All Answers
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto rounded-xl border-2 border-slate-800">
+                    <table class="w-full text-left border-collapse text-sm bg-white text-slate-900">
+                        <thead>
+                            <tr class="bg-[#cceeff] text-slate-900 border-b-2 border-slate-800">
+                                <th class="p-3.5 w-1/6 font-bold border-r-2 border-slate-800"></th>
+                                <th class="p-3.5 w-5/12 font-extrabold border-r-2 border-slate-800 text-base">
+                                    Rust (hydrated iron(III) oxide)
+                                </th>
+                                <th class="p-3.5 w-5/12 font-extrabold text-base">
+                                    Aluminium oxide
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y-2 divide-slate-800">
+                            <!-- Row 1: Nature -->
+                            <tr>
+                                <td class="p-3.5 font-bold border-r-2 border-slate-800 bg-slate-50">Nature</td>
+                                <td class="p-3.5 border-r-2 border-slate-800 font-semibold">
+                                    <span onclick="toggleBlank(this)" data-ans="Fe<sub>2</sub>O<sub>3</sub> · <i>n</i>H<sub>2</sub>O" class="blank-box px-1 font-bold">Fe<sub>2</sub>O<sub>3</sub> · <i>n</i>H<sub>2</sub>O</span>
+                                </td>
+                                <td class="p-3.5 font-semibold">
+                                    <span onclick="toggleBlank(this)" data-ans="Al<sub>2</sub>O<sub>3</sub>" class="blank-box px-1 font-bold">Al<sub>2</sub>O<sub>3</sub></span>
+                                </td>
+                            </tr>
+                            <!-- Row 2: Chemical Equations -->
+                            <tr>
+                                <td class="p-3.5 font-bold border-r-2 border-slate-800 bg-slate-50">Chemical Equation(s)</td>
+                                <td class="p-3.5 border-r-2 border-slate-800 space-y-1">
+                                    <div class="font-bold">Overall equation of rusting:</div>
+                                    <div class="font-medium">
+                                        4Fe(s) + 3O<sub>2</sub>(g) + 2<i>n</i>H<sub>2</sub>O(l) &rarr;
+                                        <span onclick="toggleBlank(this)" data-ans="2Fe<sub>2</sub>O<sub>3</sub>·<i>n</i>H<sub>2</sub>O(s)" class="blank-box highlight-yellow">2Fe<sub>2</sub>O<sub>3</sub>·<i>n</i>H<sub>2</sub>O(s)</span>
+                                    </div>
+                                </td>
+                                <td class="p-3.5 space-y-2">
+                                    <div>
+                                        <div class="font-bold">Oxidation of Al:</div>
+                                        <div class="font-medium">
+                                            4Al(s) + 3O<sub>2</sub>(g) &rarr; 2<span onclick="toggleBlank(this)" data-ans="Al<sub>2</sub>O<sub>3</sub>" class="blank-box highlight-yellow">Al<sub>2</sub>O<sub>3</sub></span>(s)
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="font-bold">Thickening of the oxide layer (Anodization) :</div>
+                                        <div class="font-medium">
+                                            2Al(s) + 3H<sub>2</sub>O(l) &rarr; <span onclick="toggleBlank(this)" data-ans="Al<sub>2</sub>O<sub>3</sub>(s)" class="blank-box highlight-yellow">Al<sub>2</sub>O<sub>3</sub>(s)</span> + 3H<sub>2</sub>(g)
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <!-- Row 3: Permeability -->
+                            <tr>
+                                <td class="p-3.5 font-bold border-r-2 border-slate-800 bg-slate-50">Permeability</td>
+                                <td class="p-3.5 border-r-2 border-slate-800">
+                                    <span onclick="toggleBlank(this)" data-ans="permeable" class="blank-box font-bold text-amber-800 px-1">permeable</span> to both air and water
+                                </td>
+                                <td class="p-3.5">
+                                    <span onclick="toggleBlank(this)" data-ans="impermeable" class="blank-box font-bold text-emerald-800 px-1">impermeable</span> to both air and water
+                                </td>
+                            </tr>
+                            <!-- Row 4: Porous or not -->
+                            <tr>
+                                <td class="p-3.5 font-bold border-r-2 border-slate-800 bg-slate-50">Porous or not</td>
+                                <td class="p-3.5 border-r-2 border-slate-800">
+                                    <span onclick="toggleBlank(this)" data-ans="porous and loosely bound" class="blank-box font-bold text-amber-800 px-1">porous and loosely bound</span> to the metal
+                                </td>
+                                <td class="p-3.5">
+                                    <span onclick="toggleBlank(this)" data-ans="hard, closely bound" class="blank-box highlight-grey">hard, closely bound</span> to the metal
+                                </td>
+                            </tr>
+                            <!-- Row 5: Protection -->
+                            <tr>
+                                <td class="p-3.5 font-bold border-r-2 border-slate-800 bg-slate-50">Protection</td>
+                                <td class="p-3.5 border-r-2 border-slate-800 space-y-2">
+                                    <div class="font-bold text-slate-900">Not protected</div>
+                                    <ul class="list-disc list-inside space-y-1">
+                                        <li>This layer is <span onclick="toggleBlank(this)" data-ans="permeable" class="blank-box font-bold">permeable</span> to <strong>air</strong> and <strong>water</strong> as it is porous.</li>
+                                        <li>The iron(III) oxide layer <span onclick="toggleBlank(this)" data-ans="flakes off easily" class="blank-box font-bold">flakes off easily</span>.</li>
+                                    </ul>
+                                </td>
+                                <td class="p-3.5 space-y-2">
+                                    <div class="font-bold text-slate-900">Further protected</div>
+                                    <ul class="list-disc list-inside space-y-1">
+                                        <li>This layer is <span onclick="toggleBlank(this)" data-ans="impermeable" class="blank-box font-bold">impermeable</span> to <strong>air</strong> and <strong>water</strong>.</li>
+                                        <li>The aluminium oxide layer <span onclick="toggleBlank(this)" data-ans="firmly adheres" class="blank-box font-bold">firmly adheres</span> to its surface.</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <!-- Row 6: Result -->
+                            <tr>
+                                <td class="p-3.5 font-bold border-r-2 border-slate-800 bg-slate-50">Result</td>
+                                <td class="p-3.5 border-r-2 border-slate-800">
+                                    &there4; New surface of iron then exposes to air and water and rusts <span onclick="toggleBlank(this)" data-ans="more seriously" class="blank-box font-bold text-red-700">more seriously</span>.
+                                </td>
+                                <td class="p-3.5">
+                                    &there4; Can <span onclick="toggleBlank(this)" data-ans="protect" class="blank-box font-bold text-emerald-700">protect</span> the aluminium underneath from further corrosion.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // =========================================================================
+        // GLOBAL STATE & SIMULATION PARAMETERS
+        // =========================================================================
+        let isPlaying = true;
+        let simSpeed = 1.0;
+        let autoFlake = true;
+        let isAnodized = false;
+        let currentView = 'split';
+
+        // Iron Grid State (Rows x Cols of atoms)
+        const ROWS = 9;
+        const COLS = 18;
+        let ironGrid = [];      // 0 = empty (dropped off), 1 = pure Fe, 2 = porous rust (Fe2O3.nH2O)
+        let ironParticles = []; // O2 and H2O particles in Iron chamber
+        let fallingFlakes = []; // Flaking rust chunks falling downward due to gravity
+        let landedFlakes = [];  // Rust flakes accumulated on the ground floor
+        let flakeTimer = 0;
+
+        // Aluminium Grid State
+        let alGrid = [];        // 1 = pure Al, 2 = dense Al2O3 protective oxide
+        let alParticles = [];   // O2 and H2O particles in Aluminium chamber
+        let shieldRipples = []; // Visual bounce ripples when O2/H2O hit impermeable Al2O3
+        let hammerNoticeTimer = 0;
+        let anodizeBubbles = [];
+
+        // Macroscopic Whole-Block View State
+        let macroO2 = [];
+        let macroAlOxideProgress = 0;
+        let macroFeShrink = 0;
+        let macroRustSegments = [];
+        let macroFallingFlakes = [];
+        let macroLandedFlakes = [];
+        let macroRipples = [];
+
+        // Canvas references
+        const canvasIron = document.getElementById('canvas-iron');
+        const ctxIron = canvasIron.getContext('2d');
+        const canvasAl = document.getElementById('canvas-aluminium');
+        const ctxAl = canvasAl.getContext('2d');
+        const canvasMacro = document.getElementById('canvas-macro');
+        const ctxMacro = canvasMacro.getContext('2d');
+
+        // =========================================================================
+        // INITIALIZATION & RESIZING
+        // =========================================================================
+        function resizeCanvases() {
+            [canvasIron, canvasAl, canvasMacro].forEach(c => {
+                if (!c) return;
+                const rect = c.parentElement.getBoundingClientRect();
+                if (rect.width > 0 && rect.height > 0) {
+                    c.width = rect.width;
+                    c.height = rect.height;
+                }
+            });
+        }
+
+        function initGrids() {
+            // Initialize Iron Grid (9 rows x 18 cols of pure Fe)
+            ironGrid = [];
+            for (let r = 0; r < ROWS; r++) {
+                const row = [];
+                for (let c = 0; c < COLS; c++) {
+                    row.push({
+                        state: 1, // 1 = pure Fe, 2 = rust, 0 = flaked off
+                        rustAge: 0,
+                        jitterX: (Math.random() - 0.5) * 4,
+                        jitterY: (Math.random() - 0.5) * 4
+                    });
+                }
+                ironGrid.push(row);
+            }
+
+            // Initialize Aluminium Grid (9 rows x 18 cols of pure Al)
+            alGrid = [];
+            for (let r = 0; r < ROWS; r++) {
+                const row = [];
+                for (let c = 0; c < COLS; c++) {
+                    row.push({
+                        state: 1 // 1 = pure Al, 2 = Al2O3
+                    });
+                }
+                alGrid.push(row);
+            }
+
+            // Spawn O2 and H2O particles for Iron & Aluminium
+            ironParticles = [];
+            alParticles = [];
+            fallingFlakes = [];
+            landedFlakes = [];
+            shieldRipples = [];
+            anodizeBubbles = [];
+            isAnodized = false;
+            updateAnodizeUI();
+
+            for (let i = 0; i < 28; i++) {
+                ironParticles.push(createIronGasParticle(i % 2 === 0 ? 'O2' : 'H2O'));
+                alParticles.push(createAlGasParticle(i % 2 === 0 ? 'O2' : 'H2O'));
+            }
+
+            updateMeters();
+        }
+
+        function createIronGasParticle(type) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 1.2 + Math.random() * 0.9;
+            return {
+                x: Math.random() * 420 + 40,
+                y: Math.random() * 120 + 185,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed, // Freely moving in all directions in the air
+                type: type,
+                penetrating: false
+            };
+        }
+
+        function createAlGasParticle(type) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 1.2 + Math.random() * 0.9;
+            return {
+                x: Math.random() * 420 + 40,
+                y: Math.random() * 110 + 25,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed, // Freely moving in all directions in the air
+                type: type,
+                penetrating: false
+            };
+        }
+
+        function resetSimulation() {
+            initGrids();
+            document.getElementById('iron-live-text').innerHTML =
+                'Fresh Fe on ceiling! O<sub>2</sub> &amp; H<sub>2</sub>O move freely in the air, seep through porous rust, and loose rust drops to the ground.';
+            document.getElementById('al-live-text').innerHTML =
+                'Fresh Al reacts rapidly with O<sub>2</sub> in the air to form a tight, impermeable Al<sub>2</sub>O<sub>3</sub> protective layer.';
+        }
+
+        // =========================================================================
+        // UI CONTROLS
+        // =========================================================================
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            const icon = document.getElementById('play-icon');
+            const text = document.getElementById('play-text');
+            const btn = document.getElementById('btn-play-pause');
+            if (isPlaying) {
+                icon.className = 'fa-solid fa-pause';
+                text.textContent = 'Pause';
+                btn.className = 'px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm flex items-center gap-2 shadow-sm transition';
+            } else {
+                icon.className = 'fa-solid fa-play';
+                text.textContent = 'Resume';
+                btn.className = 'px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm flex items-center gap-2 shadow-sm transition';
+            }
+        }
+
+        function updateSpeed(val) {
+            simSpeed = parseFloat(val);
+            document.getElementById('speed-label').textContent = simSpeed.toFixed(1) + 'x';
+        }
+
+        function toggleAutoFlake() {
+            autoFlake = !autoFlake;
+            const btn = document.getElementById('btn-auto-flake');
+            if (autoFlake) {
+                btn.textContent = 'Auto-Drop: ON';
+                btn.className = 'py-2.5 px-3 rounded-xl bg-amber-100 border border-amber-300 text-amber-900 hover:bg-amber-200 font-bold text-xs sm:text-sm transition';
+            } else {
+                btn.textContent = 'Auto-Drop: OFF';
+                btn.className = 'py-2.5 px-3 rounded-xl bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200 font-semibold text-xs sm:text-sm transition';
+            }
+        }
+
+        function flakeRustNow() {
+            let flakedCount = 0;
+            const w = canvasIron.width || 500;
+            const h = canvasIron.height || 360;
+            const ceilingTop = 24;
+            const padX = 28;
+            const gridW = w - padX * 2;
+            const gridH = h * 0.42;
+            const cellW = gridW / COLS;
+            const cellH = gridH / ROWS;
+
+            for (let r = ROWS - 1; r >= 0; r--) {
+                for (let c = 0; c < COLS; c++) {
+                    if (ironGrid[r][c].state === 2) {
+                        ironGrid[r][c].state = 0;
+                        flakedCount++;
+                        fallingFlakes.push({
+                            x: padX + c * cellW + cellW / 2,
+                            y: ceilingTop + r * cellH + cellH / 2,
+                            vx: (Math.random() - 0.5) * 1.4,
+                            vy: Math.random() * 1.2 + 0.8,
+                            rot: (Math.random() - 0.5) * 0.5,
+                            vRot: (Math.random() - 0.5) * 0.12,
+                            w: cellW * 0.76,
+                            h: cellH * 0.72
+                        });
+                    }
+                }
+            }
+
+            if (flakedCount > 0) {
+                document.getElementById('iron-live-text').innerHTML =
+                    '<strong class="text-red-600">Rust Dropped to the Ground!</strong> Fresh Fe surface on the ceiling is now exposed to air &amp; water — rusting becomes more serious!';
+            } else {
+                document.getElementById('iron-live-text').innerHTML =
+                    'Wait a moment for reddish-brown rust (Fe<sub>2</sub>O<sub>3</sub>·<i>n</i>H<sub>2</sub>O) to form on the ceiling iron, then drop it!';
+            }
+            updateMeters();
+        }
+
+        function testAlAdhesion() {
+            hammerNoticeTimer = 110;
+            document.getElementById('al-live-text').innerHTML =
+                '<strong class="text-emerald-700">Firmly Adhered!</strong> The Al<sub>2</sub>O<sub>3</sub> layer is hard and closely bound to Al — it does NOT flake off!';
+        }
+
+        function toggleAnodization() {
+            isAnodized = !isAnodized;
+            if (isAnodized) {
+                for (let r = 0; r < 2; r++) {
+                    for (let c = 0; c < COLS; c++) {
+                        alGrid[r][c].state = 2;
+                    }
+                }
+                const w = canvasAl.width || 500;
+                const h = canvasAl.height || 360;
+                for (let i = 0; i < 18; i++) {
+                    anodizeBubbles.push({
+                        x: 40 + Math.random() * (w - 80),
+                        y: h * 0.44,
+                        vy: -Math.random() * 2 - 1.2,
+                        r: Math.random() * 4 + 3,
+                        alpha: 1.0
+                    });
+                }
+                document.getElementById('al-live-text').innerHTML =
+                    '<strong class="text-purple-800">Anodization Complete!</strong> Al at the anode (+) in dilute H<sub>2</sub>SO<sub>4</sub> thickened the impermeable Al<sub>2</sub>O<sub>3</sub> layer!';
+            } else {
+                for (let c = 0; c < COLS; c++) {
+                    alGrid[0][c].state = 2;
+                    alGrid[1][c].state = 1;
+                }
+                document.getElementById('al-live-text').innerHTML =
+                    'Returned to natural thin Al<sub>2</sub>O<sub>3</sub> layer (still 100% impermeable to air and water).';
+            }
+            updateAnodizeUI();
+            updateMeters();
+        }
+
+        function updateAnodizeUI() {
+            const btn = document.getElementById('btn-anodize');
+            const eq = document.getElementById('al-equation-display');
+            const badge = document.getElementById('al-layer-badge');
+
+            if (isAnodized) {
+                btn.innerHTML = '<i class="fa-solid fa-check-circle"></i> Anodized (Thick Layer ON)';
+                btn.className = 'flex-1 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-2';
+                eq.innerHTML = 'Anodization: 2Al(s) + 3H<sub>2</sub>O(l) &rarr; <span class="highlight-yellow">Al<sub>2</sub>O<sub>3</sub>(s)</span> + 3H<sub>2</sub>(g)';
+                badge.innerHTML = 'Thick Anodized Al<sub>2</sub>O<sub>3</sub>';
+            } else {
+                btn.innerHTML = '<i class="fa-solid fa-bolt"></i> Thicken by Anodization';
+                btn.className = 'flex-1 py-2.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-2';
+                eq.innerHTML = '4Al(s) + 3O<sub>2</sub>(g) &rarr; <span class="highlight-yellow">2Al<sub>2</sub>O<sub>3</sub>(s)</span>';
+                badge.textContent = 'Thin Natural Oxide';
+            }
+        }
+
+        function updateMeters() {
+            let pureFe = 0;
+            let pureAl = 0;
+            const total = ROWS * COLS;
+
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if (ironGrid[r] && ironGrid[r][c] && ironGrid[r][c].state === 1) pureFe++;
+                    if (alGrid[r] && alGrid[r][c] && alGrid[r][c].state === 1) pureAl++;
+                }
+            }
+
+            const fePct = Math.round((pureFe / total) * 100);
+            const alPct = Math.round((pureAl / total) * 100);
+
+            document.getElementById('fe-percent').textContent = fePct + '%';
+            document.getElementById('fe-bar').style.width = fePct + '%';
+
+            document.getElementById('al-percent').textContent = alPct + '%';
+            document.getElementById('al-bar').style.width = alPct + '%';
+        }
+
+        // Helper: check if an Fe cell is exposed to air or adjacent to porous rust
+        function isFeCellExposed(r, c) {
+            if (r === ROWS - 1) return true; // Bottom-most row facing the air
+            if (ironGrid[r + 1][c].state !== 1) return true; // Below is rust (2) or empty air (0)
+            if (r > 0 && ironGrid[r - 1][c].state === 2) return true;
+            if (c > 0 && ironGrid[r][c - 1].state === 2) return true;
+            if (c < COLS - 1 && ironGrid[r][c + 1].state === 2) return true;
+            return false;
+        }
+
+        // =========================================================================
+        // 1. IRON CANVAS: CEILING IRON + POROUS RUST DROPPING BY GRAVITY
+        // =========================================================================
+        function updateAndDrawIron() {
+            const w = canvasIron.width;
+            const h = canvasIron.height;
+            if (!w || !h) return;
+
+            ctxIron.clearRect(0, 0, w, h);
+
+            const ceilingTop = 24;
+            const padX = 28;
+            const gridW = w - padX * 2;
+            const gridH = h * 0.42;
+            const metalBottom = ceilingTop + gridH;
+            const floorY = h - 24;
+            const cellW = gridW / COLS;
+            const cellH = gridH / ROWS;
+
+            // Bright light-mode moist air background
+            const airGrad = ctxIron.createLinearGradient(0, 0, 0, h);
+            airGrad.addColorStop(0, '#f1f5f9');
+            airGrad.addColorStop(0.5, '#f0f9ff');
+            airGrad.addColorStop(1, '#e0f2fe');
+            ctxIron.fillStyle = airGrad;
+            ctxIron.fillRect(0, 0, w, h);
+
+            // Top Ceiling Support Beam
+            ctxIron.fillStyle = '#475569';
+            ctxIron.fillRect(0, 0, w, ceilingTop);
+            ctxIron.fillStyle = '#f8fafc';
+            ctxIron.font = 'bold 11px Inter';
+            ctxIron.textAlign = 'center';
+            ctxIron.textBaseline = 'middle';
+            ctxIron.fillText('⬆ CEILING IRON BEAM — Pure Iron (Fe) Attached to Ceiling', w / 2, ceilingTop / 2);
+
+            // Ground Floor at Bottom
+            ctxIron.fillStyle = '#cbd5e1';
+            ctxIron.fillRect(0, floorY, w, h - floorY);
+            ctxIron.strokeStyle = '#94a3b8';
+            ctxIron.lineWidth = 2;
+            ctxIron.beginPath();
+            ctxIron.moveTo(0, floorY);
+            ctxIron.lineTo(w, floorY);
+            ctxIron.stroke();
+
+            // Auto-drop logic: loosely bound rust on the underside of ceiling iron drops due to gravity
+            if (isPlaying && autoFlake) {
+                flakeTimer += simSpeed;
+                if (flakeTimer > 65) {
+                    flakeTimer = 0;
+                    for (let r = ROWS - 1; r >= 0; r--) {
+                        for (let c = 0; c < COLS; c++) {
+                            const cell = ironGrid[r][c];
+                            if (cell.state === 2) {
+                                cell.rustAge += 1;
+                                const bottomExposed = (r === ROWS - 1) || (ironGrid[r + 1][c].state === 0);
+                                if (bottomExposed && cell.rustAge > 3 && Math.random() < 0.35) {
+                                    cell.state = 0;
+                                    fallingFlakes.push({
+                                        x: padX + c * cellW + cellW / 2,
+                                        y: ceilingTop + r * cellH + cellH / 2,
+                                        vx: (Math.random() - 0.5) * 1.2,
+                                        vy: Math.random() * 0.8 + 0.5,
+                                        rot: (Math.random() - 0.5) * 0.4,
+                                        vRot: (Math.random() - 0.5) * 0.1,
+                                        w: cellW * 0.76,
+                                        h: cellH * 0.72
+                                    });
+                                    updateMeters();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Draw Ceiling Iron (Fe) & Porous Rust (Fe2O3.nH2O) Grid
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const cell = ironGrid[r][c];
+                    const cx = padX + c * cellW;
+                    const cy = ceilingTop + r * cellH;
+
+                    if (cell.state === 1) {
+                        // Pure Iron (Fe)
+                        ctxIron.fillStyle = '#94a3b8';
+                        ctxIron.strokeStyle = '#64748b';
+                        ctxIron.lineWidth = 1;
+                        ctxIron.beginPath();
+                        ctxIron.roundRect(cx + 1, cy + 1, cellW - 2, cellH - 2, 4);
+                        ctxIron.fill();
+                        ctxIron.stroke();
+
+                        ctxIron.fillStyle = '#0f172a';
+                        ctxIron.font = 'bold 10px Inter';
+                        ctxIron.textAlign = 'center';
+                        ctxIron.textBaseline = 'middle';
+                        ctxIron.fillText('Fe', cx + cellW / 2, cy + cellH / 2);
+                    } else if (cell.state === 2) {
+                        // Porous Rust (Fe2O3.nH2O) loosely bound & sagging slightly
+                        const wobbleX = isPlaying ? Math.sin(Date.now() * 0.009 + r + c) * 1.3 : 0;
+                        const sagY = isPlaying ? Math.abs(Math.sin(Date.now() * 0.006 + c)) * 2.2 : 1.5;
+                        ctxIron.save();
+                        ctxIron.translate(
+                            cx + cellW / 2 + cell.jitterX * 0.4 + wobbleX,
+                            cy + cellH / 2 + sagY
+                        );
+
+                        ctxIron.fillStyle = '#9a3412';
+                        ctxIron.strokeStyle = '#d97706';
+                        ctxIron.lineWidth = 1.2;
+                        ctxIron.beginPath();
+                        ctxIron.roundRect(-cellW * 0.37, -cellH * 0.36, cellW * 0.74, cellH * 0.72, 5);
+                        ctxIron.fill();
+                        ctxIron.stroke();
+
+                        // Visible pore/crack inside rust
+                        ctxIron.strokeStyle = '#fef3c7';
+                        ctxIron.lineWidth = 1.6;
+                        ctxIron.beginPath();
+                        ctxIron.moveTo(-cellW * 0.16, cellH * 0.34);
+                        ctxIron.lineTo(cellW * 0.16, -cellH * 0.34);
+                        ctxIron.stroke();
+
+                        ctxIron.restore();
+                    }
+                }
+            }
+
+            // Draw Landed Rust Flakes Piled on the Ground Floor
+            landedFlakes.forEach(lf => {
+                ctxIron.save();
+                ctxIron.translate(lf.x, lf.y);
+                ctxIron.rotate(lf.rot);
+                ctxIron.fillStyle = '#9a3412';
+                ctxIron.strokeStyle = '#d97706';
+                ctxIron.lineWidth = 1;
+                ctxIron.beginPath();
+                ctxIron.roundRect(-lf.w / 2, -lf.h / 2, lf.w, lf.h, 3);
+                ctxIron.fill();
+                ctxIron.stroke();
+                ctxIron.restore();
+            });
+
+            // Update & Draw Falling Rust Flakes Dropping Due to Gravity
+            for (let i = fallingFlakes.length - 1; i >= 0; i--) {
+                const f = fallingFlakes[i];
+                if (isPlaying) {
+                    f.x += f.vx * simSpeed;
+                    f.y += f.vy * simSpeed;
+                    f.vy += 0.18 * simSpeed;
+                    f.rot += f.vRot * simSpeed;
+                }
+
+                const targetFloorY = floorY - 4 - Math.min(18, (landedFlakes.length % 25) * 0.55);
+                if (f.y >= targetFloorY) {
+                    landedFlakes.push({
+                        x: Math.max(padX, Math.min(w - padX, f.x)),
+                        y: targetFloorY,
+                        rot: f.rot * 0.3,
+                        w: f.w,
+                        h: f.h
+                    });
+                    if (landedFlakes.length > 140) {
+                        landedFlakes.shift();
+                    }
+                    fallingFlakes.splice(i, 1);
+                    continue;
+                }
+
+                ctxIron.save();
+                ctxIron.translate(f.x, f.y);
+                ctxIron.rotate(f.rot);
+                ctxIron.fillStyle = '#9a3412';
+                ctxIron.strokeStyle = '#ea580c';
+                ctxIron.lineWidth = 1.2;
+                ctxIron.beginPath();
+                ctxIron.roundRect(-f.w / 2, -f.h / 2, f.w, f.h, 4);
+                ctxIron.fill();
+                ctxIron.stroke();
+                ctxIron.restore();
+            }
+
+            // Update & Draw O2 and H2O Particles Moving Freely Around the Air
+            ironParticles.forEach(p => {
+                if (isPlaying) {
+                    p.vx += (Math.random() - 0.5) * 0.12 * simSpeed;
+                    p.vy += (Math.random() - 0.5) * 0.12 * simSpeed;
+
+                    const spd = Math.hypot(p.vx, p.vy);
+                    if (spd > 2.1) {
+                        p.vx = (p.vx / spd) * 2.1;
+                        p.vy = (p.vy / spd) * 2.1;
+                    } else if (spd < 1.0) {
+                        p.vx = (p.vx / (spd || 1)) * 1.2;
+                        p.vy = (p.vy / (spd || 1)) * 1.2;
+                    }
+
+                    p.x += p.vx * simSpeed;
+                    p.y += p.vy * simSpeed;
+
+                    if (p.x < padX + 8) { p.x = padX + 8; p.vx = Math.abs(p.vx); }
+                    if (p.x > w - padX - 8) { p.x = w - padX - 8; p.vx = -Math.abs(p.vx); }
+                    if (p.y > floorY - 14) {
+                        p.y = floorY - 14;
+                        p.vy = -Math.abs(p.vy);
+                    }
+                    if (p.y < ceilingTop + 4) {
+                        p.y = ceilingTop + 4;
+                        p.vy = Math.abs(p.vy);
+                    }
+
+                    // Check interaction with ceiling iron/rust grid
+                    if (p.y <= metalBottom) {
+                        const col = Math.floor((p.x - padX) / cellW);
+                        const row = Math.floor((p.y - ceilingTop) / cellH);
+
+                        if (col >= 0 && col < COLS && row >= 0 && row < ROWS) {
+                            const target = ironGrid[row][col];
+                            if (target.state === 0) {
+                                // Empty space where rust dropped off: air molecule moves freely
+                                p.penetrating = false;
+                            } else if (target.state === 2) {
+                                // POROUS RUST: O2 & H2O seep upward through pores to reach inner Fe
+                                p.penetrating = true;
+                                p.vy = -Math.abs(p.vy) * 0.75 - 0.25;
+                                target.rustAge += 0.04;
+                            } else if (target.state === 1) {
+                                // Only exposed Fe or Fe touching porous rust reacts
+                                if (isFeCellExposed(row, col) && Math.random() < 0.16 * simSpeed) {
+                                    target.state = 2;
+                                    target.rustAge = 1;
+                                    updateMeters();
+
+                                    // Replacement air molecule enters naturally from the side air
+                                    p.x = Math.random() < 0.5 ? padX + 12 : w - padX - 12;
+                                    p.y = metalBottom + 15 + Math.random() * (floorY - metalBottom - 40);
+                                    const angle = (Math.random() - 0.5) * Math.PI * 0.8 + (p.x < w / 2 ? 0 : Math.PI);
+                                    p.vx = Math.cos(angle) * 1.5;
+                                    p.vy = Math.sin(angle) * 1.5;
+                                    p.penetrating = false;
+                                } else {
+                                    // Bounces off solid Fe back toward the air space below
+                                    p.y = ceilingTop + (row + 1) * cellH + 2;
+                                    p.vy = Math.abs(p.vy);
+                                    p.penetrating = false;
+                                }
+                            }
+                        }
+                    } else {
+                        p.penetrating = false;
+                    }
+                }
+
+                drawMolecule(ctxIron, p.x, p.y, p.type, p.penetrating);
+            });
+
+            // Helpful annotations on canvas
+            ctxIron.fillStyle = '#b45309';
+            ctxIron.font = 'bold 11px Inter';
+            ctxIron.textAlign = 'right';
+            ctxIron.fillText('🔄 O₂ & H₂O move freely in air & seep into pores | ⬇ Rust drops by gravity', w - 12, metalBottom + 16);
+
+            ctxIron.fillStyle = '#7c2d12';
+            ctxIron.font = 'bold 11px Inter';
+            ctxIron.textAlign = 'center';
+            ctxIron.fillText('⬇ GROUND FLOOR — Fallen Porous Rust (Fe₂O₃·nH₂O) Piles Up Here', w / 2, h - 11);
+        }
+
+        // =========================================================================
+        // 2. ALUMINIUM CANVAS: IMPERMEABLE & CLOSELY BOUND Al2O3 LAYER
+        // =========================================================================
+        function updateAndDrawAluminium() {
+            const w = canvasAl.width;
+            const h = canvasAl.height;
+            if (!w || !h) return;
+
+            ctxAl.clearRect(0, 0, w, h);
+
+            const metalTop = h * 0.44;
+            const padX = 28;
+            const gridW = w - padX * 2;
+            const gridH = h - metalTop - 22;
+            const cellW = gridW / COLS;
+            const cellH = gridH / ROWS;
+
+            // Bright light-mode air background
+            const airGrad = ctxAl.createLinearGradient(0, 0, 0, metalTop);
+            airGrad.addColorStop(0, '#f0f9ff');
+            airGrad.addColorStop(1, '#e0f2fe');
+            ctxAl.fillStyle = airGrad;
+            ctxAl.fillRect(0, 0, w, h);
+
+            // Check if the entire top surface of Al has formed continuous Al2O3
+            let surfaceComplete = true;
+            for (let c = 0; c < COLS; c++) {
+                if (alGrid[0][c].state !== 2) {
+                    surfaceComplete = false;
+                    break;
+                }
+            }
+
+            // Draw Aluminium & Continuous Al2O3 Layer
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const cell = alGrid[r][c];
+                    const cx = padX + c * cellW;
+                    const cy = metalTop + r * cellH;
+
+                    if (cell.state === 1) {
+                        // Pure Aluminium (Al) - bright silvery metallic block
+                        ctxAl.fillStyle = '#cbd5e1';
+                        ctxAl.strokeStyle = '#94a3b8';
+                        ctxAl.lineWidth = 1;
+                        ctxAl.beginPath();
+                        ctxAl.roundRect(cx + 1, cy + 1, cellW - 2, cellH - 2, 4);
+                        ctxAl.fill();
+                        ctxAl.stroke();
+
+                        ctxAl.fillStyle = '#1e293b';
+                        ctxAl.font = 'bold 10px Inter';
+                        ctxAl.textAlign = 'center';
+                        ctxAl.textBaseline = 'middle';
+                        ctxAl.fillText('Al', cx + cellW / 2, cy + cellH / 2);
+                    } else if (cell.state === 2) {
+                        // Impermeable, tightly bound Al2O3 layer (zero gaps between blocks)
+                        const grad = ctxAl.createLinearGradient(cx, cy, cx, cy + cellH);
+                        grad.addColorStop(0, '#a855f7');
+                        grad.addColorStop(1, '#7e22ce');
+                        ctxAl.fillStyle = grad;
+                        ctxAl.fillRect(cx, cy, cellW + 0.6, cellH + 0.6);
+
+                        ctxAl.strokeStyle = '#581c87';
+                        ctxAl.lineWidth = 0.8;
+                        ctxAl.strokeRect(cx, cy, cellW, cellH);
+
+                        ctxAl.fillStyle = '#ffffff';
+                        ctxAl.font = 'bold 8px Inter';
+                        ctxAl.textAlign = 'center';
+                        ctxAl.textBaseline = 'middle';
+                        ctxAl.fillText('Al₂O₃', cx + cellW / 2, cy + cellH / 2);
+                    }
+                }
+            }
+
+            // Draw glowing protective seal line on top of Al2O3
+            if (surfaceComplete) {
+                ctxAl.strokeStyle = '#9333ea';
+                ctxAl.lineWidth = 3;
+                ctxAl.beginPath();
+                ctxAl.moveTo(padX, metalTop);
+                ctxAl.lineTo(w - padX, metalTop);
+                ctxAl.stroke();
+            }
+
+            // Update & Draw O2 and H2O Particles Moving Freely in the Air Above Al
+            alParticles.forEach(p => {
+                if (isPlaying) {
+                    p.vx += (Math.random() - 0.5) * 0.12 * simSpeed;
+                    p.vy += (Math.random() - 0.5) * 0.12 * simSpeed;
+
+                    const spd = Math.hypot(p.vx, p.vy);
+                    if (spd > 2.1) {
+                        p.vx = (p.vx / spd) * 2.1;
+                        p.vy = (p.vy / spd) * 2.1;
+                    } else if (spd < 1.0) {
+                        p.vx = (p.vx / (spd || 1)) * 1.2;
+                        p.vy = (p.vy / (spd || 1)) * 1.2;
+                    }
+
+                    p.x += p.vx * simSpeed;
+                    p.y += p.vy * simSpeed;
+
+                    if (p.x < padX + 8) { p.x = padX + 8; p.vx = Math.abs(p.vx); }
+                    if (p.x > w - padX - 8) { p.x = w - padX - 8; p.vx = -Math.abs(p.vx); }
+                    if (p.y < 14) { p.y = 14; p.vy = Math.abs(p.vy); }
+
+                    // Check collision with Aluminium / Al2O3 surface
+                    if (p.y >= metalTop - 7) {
+                        const col = Math.floor((p.x - padX) / cellW);
+                        if (col >= 0 && col < COLS) {
+                            if (alGrid[0][col].state === 1) {
+                                // Rapidly oxidizes top surface Al atom into Al2O3
+                                alGrid[0][col].state = 2;
+                                if (col > 0 && alGrid[0][col - 1].state === 1) alGrid[0][col - 1].state = 2;
+                                if (col < COLS - 1 && alGrid[0][col + 1].state === 1) alGrid[0][col + 1].state = 2;
+                                updateMeters();
+                            } else {
+                                // Bounces off the IMPERMEABLE Al2O3 barrier!
+                                shieldRipples.push({
+                                    x: p.x,
+                                    y: metalTop,
+                                    r: 3,
+                                    alpha: 0.9
+                                });
+                            }
+                        }
+                        p.y = metalTop - 8;
+                        p.vy = -Math.abs(p.vy);
+                    }
+                }
+
+                drawMolecule(ctxAl, p.x, p.y, p.type, false);
+            });
+
+            // Draw Shield Bounce Ripples on Al2O3 Surface
+            for (let i = shieldRipples.length - 1; i >= 0; i--) {
+                const rp = shieldRipples[i];
+                if (isPlaying) {
+                    rp.r += 0.9 * simSpeed;
+                    rp.alpha -= 0.04 * simSpeed;
+                }
+                if (rp.alpha <= 0) {
+                    shieldRipples.splice(i, 1);
+                    continue;
+                }
+                ctxAl.strokeStyle = `rgba(147, 51, 234, ${rp.alpha})`;
+                ctxAl.lineWidth = 2;
+                ctxAl.beginPath();
+                ctxAl.arc(rp.x, rp.y, rp.r, Math.PI, 0);
+                ctxAl.stroke();
+            }
+
+            // Draw H2(g) Bubbles During Anodization
+            for (let i = anodizeBubbles.length - 1; i >= 0; i--) {
+                const b = anodizeBubbles[i];
+                if (isPlaying) {
+                    b.y += b.vy * simSpeed;
+                    b.alpha -= 0.015 * simSpeed;
+                }
+                if (b.alpha <= 0 || b.y < 10) {
+                    anodizeBubbles.splice(i, 1);
+                    continue;
+                }
+                ctxAl.fillStyle = `rgba(255, 255, 255, ${b.alpha})`;
+                ctxAl.strokeStyle = `rgba(37, 99, 235, ${b.alpha})`;
+                ctxAl.lineWidth = 1.5;
+                ctxAl.beginPath();
+                ctxAl.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+                ctxAl.fill();
+                ctxAl.stroke();
+            }
+
+            // Draw Adhesion Hammer Test Notice
+            if (hammerNoticeTimer > 0) {
+                hammerNoticeTimer--;
+                ctxAl.fillStyle = 'rgba(16, 185, 129, 0.95)';
+                ctxAl.beginPath();
+                ctxAl.roundRect(w / 2 - 155, metalTop - 54, 310, 34, 8);
+                ctxAl.fill();
+                ctxAl.fillStyle = '#ffffff';
+                ctxAl.font = 'bold 12px Inter';
+                ctxAl.textAlign = 'center';
+                ctxAl.textBaseline = 'middle';
+                ctxAl.fillText('🔨 Hard & Closely Bound — Does NOT Flake Off!', w / 2, metalTop - 37);
+            }
+
+            // Annotations on Aluminium Canvas
+            ctxAl.fillStyle = '#6b21a8';
+            ctxAl.font = 'bold 11px Inter';
+            ctxAl.textAlign = 'right';
+            ctxAl.fillText('🛡️ Impermeable Al₂O₃ blocks all O₂ & H₂O', w - 14, metalTop - 10);
+
+            ctxAl.fillStyle = '#334155';
+            ctxAl.font = 'bold 11px Inter';
+            ctxAl.textAlign = 'center';
+            ctxAl.fillText('Pure Aluminium (Al) Underneath is 100% Protected from Further Corrosion', w / 2, h - 9);
+        }
+
+        // =========================================================================
+        // HELPER: DRAW O2 AND H2O MOLECULES
+        // =========================================================================
+        function drawMolecule(ctx, x, y, type, penetrating) {
+            ctx.save();
+            ctx.translate(x, y);
+
+            if (penetrating) {
+                ctx.fillStyle = 'rgba(250, 204, 21, 0.35)';
+                ctx.beginPath();
+                ctx.arc(0, 0, 10, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            if (type === 'O2') {
+                // Red diatomic O2 molecule
+                ctx.fillStyle = '#ef4444';
+                ctx.strokeStyle = '#991b1b';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.arc(-3.5, 0, 4.5, 0, Math.PI * 2);
+                ctx.arc(3.5, 0, 4.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            } else {
+                // Blue H2O molecule
+                ctx.fillStyle = '#0ea5e9';
+                ctx.strokeStyle = '#0369a1';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.arc(0, 0, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(-4, -3.5, 2.3, 0, Math.PI * 2);
+                ctx.arc(4, -3.5, 2.3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        // =========================================================================
+        // 3. MACROSCOPIC WHOLE-BLOCK O2 ATTACK DIAGRAM (TAB 2)
+        // =========================================================================
+        function resetMacroSim() {
+            macroAlOxideProgress = 0;
+            macroFeShrink = 0;
+            macroFallingFlakes = [];
+            macroLandedFlakes = [];
+            macroRipples = [];
+
+            // Create 24 perimeter rust segments around the Iron block
+            macroRustSegments = [];
+            const numSegs = 24;
+            for (let i = 0; i < numSegs; i++) {
+                macroRustSegments.push({
+                    angle: (i / numSegs) * Math.PI * 2,
+                    rustLevel: Math.random() * 0.35, // 0 = fresh Fe, 1 = thick loose rust ready to flake off
+                    wobblePhase: Math.random() * Math.PI * 2
+                });
+            }
+
+            // Create attacking O2 and H2O molecules around both blocks
+            macroO2 = [];
+            for (let i = 0; i < 24; i++) {
+                const angle = (i / 24) * Math.PI * 2;
+                macroO2.push({
+                    angleAl: angle + (Math.random() - 0.5) * 0.2,
+                    distAl: 75 + (i % 4) * 16,
+                    dirAl: -1,
+                    angleFe: angle + (Math.random() - 0.5) * 0.2,
+                    distFe: 75 + (i % 4) * 16,
+                    dirFe: -1,
+                    typeFe: i % 3 === 0 ? 'H2O' : 'O2'
+                });
+            }
+        }
+
+        // Helper to get a point on a rounded-rectangle-like perimeter given an angle
+        function getPerimeterPoint(cx, cy, halfW, halfH, angle) {
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+            // Superellipse (n=2.8) closely matches the textbook rounded block shape
+            const exp = 2.8;
+            const r = 1 / Math.pow(
+                Math.pow(Math.abs(cos) / Math.max(20, halfW), exp) +
+                Math.pow(Math.abs(sin) / Math.max(15, halfH), exp),
+                1 / exp
+            );
+            return {
+                x: cx + cos * r,
+                y: cy + sin * r
+            };
+        }
+
+        // Manual button in Tab 2 to flake & drop all current rust around the Whole Iron Block
+        function flakeMacroRustNow() {
+            const w = canvasMacro.width || 900;
+            const h = canvasMacro.height || 430;
+            const feCenterX = w * 0.75;
+            const feCenterY = h * 0.47;
+            const baseW = Math.min(185, w * 0.31);
+            const baseH = 96;
+            const curHalfW = Math.max(48, (baseW - macroFeShrink) / 2);
+            const curHalfH = Math.max(28, (baseH - macroFeShrink * 0.55) / 2);
+
+            let dropped = 0;
+            macroRustSegments.forEach(seg => {
+                if (seg.rustLevel > 0.2) {
+                    const pt = getPerimeterPoint(feCenterX, feCenterY, curHalfW + 5, curHalfH + 5, seg.angle);
+                    macroFallingFlakes.push({
+                        x: pt.x,
+                        y: pt.y,
+                        vx: Math.cos(seg.angle) * 1.1 + (Math.random() - 0.5) * 0.8,
+                        vy: Math.sin(seg.angle) * 0.5 + 0.6,
+                        rot: seg.angle,
+                        vRot: (Math.random() - 0.5) * 0.14,
+                        w: 16 + Math.random() * 6,
+                        h: 8 + Math.random() * 3
+                    });
+                    seg.rustLevel = 0;
+                    dropped++;
+                }
+            });
+
+            if (dropped > 0) {
+                macroFeShrink = Math.min(75, macroFeShrink + 3.2);
+            }
+        }
+
+        function updateAndDrawMacro() {
+            const w = canvasMacro.width;
+            const h = canvasMacro.height;
+            if (!w || !h) return;
+
+            ctxMacro.clearRect(0, 0, w, h);
+
+            // Soft light background
+            ctxMacro.fillStyle = '#f8fafc';
+            ctxMacro.fillRect(0, 0, w, h);
+
+            const floorY = h - 42;
+
+            // Ground floor line for both sides
+            ctxMacro.fillStyle = '#e2e8f0';
+            ctxMacro.fillRect(0, floorY, w, h - floorY);
+            ctxMacro.strokeStyle = '#cbd5e1';
+            ctxMacro.lineWidth = 2;
+            ctxMacro.beginPath();
+            ctxMacro.moveTo(0, floorY);
+            ctxMacro.lineTo(w, floorY);
+            ctxMacro.stroke();
+
+            // Center divider line
+            ctxMacro.strokeStyle = '#cbd5e1';
+            ctxMacro.lineWidth = 2;
+            ctxMacro.beginPath();
+            ctxMacro.moveTo(w / 2, 16);
+            ctxMacro.lineTo(w / 2, floorY);
+            ctxMacro.stroke();
+
+            if (isPlaying) {
+                macroAlOxideProgress = Math.min(1, macroAlOxideProgress + 0.007 * simSpeed);
+            }
+
+            const baseW = Math.min(185, w * 0.31);
+            const baseH = 96;
+
+            // =================================================================
+            // LEFT HALF: ALUMINIUM WHOLE-BLOCK DIAGRAM (Protected by Al2O3)
+            // =================================================================
+            const alCenterX = w * 0.25;
+            const alCenterY = h * 0.47;
+
+            ctxMacro.fillStyle = '#6b21a8';
+            ctxMacro.font = 'bold 14px Inter';
+            ctxMacro.textAlign = 'center';
+            ctxMacro.fillText('Aluminium Block Attacked by Oxygen in Air', alCenterX, 26);
+
+            // Pure Aluminium block
+            const alGrad = ctxMacro.createLinearGradient(
+                alCenterX - baseW / 2, alCenterY - baseH / 2,
+                alCenterX + baseW / 2, alCenterY + baseH / 2
+            );
+            alGrad.addColorStop(0, '#f1f5f9');
+            alGrad.addColorStop(0.5, '#cbd5e1');
+            alGrad.addColorStop(1, '#94a3b8');
+            ctxMacro.fillStyle = alGrad;
+            ctxMacro.strokeStyle = '#64748b';
+            ctxMacro.lineWidth = 1.5;
+            ctxMacro.beginPath();
+            ctxMacro.roundRect(alCenterX - baseW / 2, alCenterY - baseH / 2, baseW, baseH, 22);
+            ctxMacro.fill();
+            ctxMacro.stroke();
+
+            // Impermeable, closely bound protective oxide ring (Al2O3)
+            if (macroAlOxideProgress > 0.05) {
+                ctxMacro.strokeStyle = `rgba(147, 51, 234, ${macroAlOxideProgress})`;
+                ctxMacro.lineWidth = 6;
+                ctxMacro.beginPath();
+                ctxMacro.roundRect(alCenterX - baseW / 2 - 2, alCenterY - baseH / 2 - 2, baseW + 4, baseH + 4, 24);
+                ctxMacro.stroke();
+
+                // Pointer label matching worksheet diagram
+                ctxMacro.strokeStyle = '#7e22ce';
+                ctxMacro.lineWidth = 1.5;
+                ctxMacro.beginPath();
+                ctxMacro.moveTo(alCenterX + baseW * 0.22, alCenterY - baseH / 2 - 4);
+                ctxMacro.lineTo(alCenterX + baseW * 0.32, alCenterY - baseH / 2 - 26);
+                ctxMacro.stroke();
+
+                ctxMacro.fillStyle = '#6b21a8';
+                ctxMacro.font = 'bold 11px Inter';
+                ctxMacro.fillText('Protective Al₂O₃ layer (impermeable & firmly adheres)', alCenterX + baseW * 0.12, alCenterY - baseH / 2 - 32);
+            }
+
+            ctxMacro.fillStyle = '#1e293b';
+            ctxMacro.font = 'bold 16px Inter';
+            ctxMacro.fillText('aluminium (Al)', alCenterX, alCenterY);
+
+            ctxMacro.fillStyle = '#047857';
+            ctxMacro.font = 'bold 12px Inter';
+            ctxMacro.fillText(
+                macroAlOxideProgress < 0.85
+                    ? 'Surface attacked by oxygen of the air...'
+                    : '🛡️ Al₂O₃ does NOT flake off — Al underneath is protected!',
+                alCenterX,
+                floorY + 25
+            );
+
+            // =================================================================
+            // RIGHT HALF: IRON WHOLE-BLOCK DIAGRAM (Rust Flakes & Drops Off!)
+            // =================================================================
+            const feCenterX = w * 0.75;
+            const feCenterY = h * 0.47;
+
+            ctxMacro.fillStyle = '#9a3412';
+            ctxMacro.font = 'bold 14px Inter';
+            ctxMacro.textAlign = 'center';
+            ctxMacro.fillText('Iron Block Attacked by Air & Water (Rust Flakes & Drops)', feCenterX, 26);
+
+            // Dashed outline showing original size of Iron block before rusting & flaking
+            if (macroFeShrink > 2) {
+                ctxMacro.strokeStyle = '#cbd5e1';
+                ctxMacro.lineWidth = 1.5;
+                ctxMacro.setLineDash([4, 4]);
+                ctxMacro.beginPath();
+                ctxMacro.roundRect(feCenterX - baseW / 2, feCenterY - baseH / 2, baseW, baseH, 22);
+                ctxMacro.stroke();
+                ctxMacro.setLineDash([]);
+            }
+
+            const curW = Math.max(96, baseW - macroFeShrink);
+            const curH = Math.max(54, baseH - macroFeShrink * 0.55);
+            const curHalfW = curW / 2;
+            const curHalfH = curH / 2;
+
+            // Pure Iron (Fe) core block (shrinks as outer rust flakes off)
+            const feGrad = ctxMacro.createLinearGradient(
+                feCenterX - curHalfW, feCenterY - curHalfH,
+                feCenterX + curHalfW, feCenterY + curHalfH
+            );
+            feGrad.addColorStop(0, '#cbd5e1');
+            feGrad.addColorStop(0.5, '#94a3b8');
+            feGrad.addColorStop(1, '#64748b');
+            ctxMacro.fillStyle = feGrad;
+            ctxMacro.strokeStyle = '#475569';
+            ctxMacro.lineWidth = 1.5;
+            ctxMacro.beginPath();
+            ctxMacro.roundRect(feCenterX - curHalfW, feCenterY - curHalfH, curW, curH, 18);
+            ctxMacro.fill();
+            ctxMacro.stroke();
+
+            ctxMacro.fillStyle = '#0f172a';
+            ctxMacro.font = 'bold 15px Inter';
+            ctxMacro.fillText('iron (Fe)', feCenterX, feCenterY - 6);
+            ctxMacro.fillStyle = '#b91c1c';
+            ctxMacro.font = 'bold 11px Inter';
+            ctxMacro.fillText('Fresh Fe exposed & shrinking!', feCenterX, feCenterY + 12);
+
+            // Update & Draw Porous Rust Segments around the Iron block perimeter
+            macroRustSegments.forEach(seg => {
+                if (isPlaying) {
+                    seg.rustLevel += (0.0035 + Math.random() * 0.003) * simSpeed;
+                    seg.wobblePhase += 0.08 * simSpeed;
+
+                    // When a rust chunk becomes thick & loose, it flakes off and falls due to gravity!
+                    if (seg.rustLevel >= 1.0) {
+                        const pt = getPerimeterPoint(feCenterX, feCenterY, curHalfW + 5, curHalfH + 5, seg.angle);
+                        macroFallingFlakes.push({
+                            x: pt.x,
+                            y: pt.y,
+                            vx: Math.cos(seg.angle) * 0.9 + (Math.random() - 0.5) * 0.7,
+                            vy: Math.sin(seg.angle) * 0.4 + 0.5,
+                            rot: seg.angle,
+                            vRot: (Math.random() - 0.5) * 0.12,
+                            w: 15 + Math.random() * 6,
+                            h: 7 + Math.random() * 3
+                        });
+                        seg.rustLevel = 0; // Fresh iron surface is now exposed at this spot!
+                        macroFeShrink = Math.min(75, macroFeShrink + 0.22 * simSpeed);
+                    }
+                }
+
+                // Draw attached porous rust chunk if rustLevel > 0.15
+                if (seg.rustLevel > 0.15) {
+                    const pt = getPerimeterPoint(feCenterX, feCenterY, curHalfW + 3, curHalfH + 3, seg.angle);
+                    const wobble = seg.rustLevel > 0.7 ? Math.sin(seg.wobblePhase) * 2.2 : 0;
+                    const liftOff = seg.rustLevel > 0.75 ? (seg.rustLevel - 0.75) * 14 : 0;
+
+                    ctxMacro.save();
+                    ctxMacro.translate(
+                        pt.x + Math.cos(seg.angle) * liftOff,
+                        pt.y + Math.sin(seg.angle) * liftOff + wobble * 0.4
+                    );
+                    ctxMacro.rotate(seg.angle + Math.PI / 2 + wobble * 0.05);
+
+                    const chunkW = 14 + seg.rustLevel * 5;
+                    const chunkH = 5 + seg.rustLevel * 5;
+
+                    ctxMacro.fillStyle = '#9a3412';
+                    ctxMacro.strokeStyle = '#d97706';
+                    ctxMacro.lineWidth = 1;
+                    ctxMacro.beginPath();
+                    ctxMacro.roundRect(-chunkW / 2, -chunkH / 2, chunkW, chunkH, 3);
+                    ctxMacro.fill();
+                    ctxMacro.stroke();
+
+                    // Pore crack line showing permeability
+                    ctxMacro.strokeStyle = '#fef3c7';
+                    ctxMacro.lineWidth = 1.2;
+                    ctxMacro.beginPath();
+                    ctxMacro.moveTo(-2, -chunkH / 2 + 1);
+                    ctxMacro.lineTo(2, chunkH / 2 - 1);
+                    ctxMacro.stroke();
+
+                    ctxMacro.restore();
+                }
+            });
+
+            // Pointer label for porous, flaking rust on Iron block
+            ctxMacro.fillStyle = '#9a3412';
+            ctxMacro.font = 'bold 11px Inter';
+            ctxMacro.fillText('Porous, loosely bound rust flakes off & drops ⬇', feCenterX, feCenterY - baseH / 2 - 32);
+
+            // Draw Landed Rust Flakes Piled on the Ground Below the Iron Block
+            macroLandedFlakes.forEach(lf => {
+                ctxMacro.save();
+                ctxMacro.translate(lf.x, lf.y);
+                ctxMacro.rotate(lf.rot);
+                ctxMacro.fillStyle = '#9a3412';
+                ctxMacro.strokeStyle = '#d97706';
+                ctxMacro.lineWidth = 1;
+                ctxMacro.beginPath();
+                ctxMacro.roundRect(-lf.w / 2, -lf.h / 2, lf.w, lf.h, 3);
+                ctxMacro.fill();
+                ctxMacro.stroke();
+                ctxMacro.restore();
+            });
+
+            // Update & Draw Falling Rust Flakes Dropping by Gravity
+            for (let i = macroFallingFlakes.length - 1; i >= 0; i--) {
+                const ff = macroFallingFlakes[i];
+                if (isPlaying) {
+                    ff.x += ff.vx * simSpeed;
+                    ff.y += ff.vy * simSpeed;
+                    ff.vy += 0.16 * simSpeed; // Gravity acceleration
+                    ff.rot += ff.vRot * simSpeed;
+                }
+
+                const pileOffset = Math.min(16, (macroLandedFlakes.length % 28) * 0.5);
+                if (ff.y >= floorY - 4 - pileOffset) {
+                    macroLandedFlakes.push({
+                        x: ff.x,
+                        y: floorY - 4 - pileOffset,
+                        rot: ff.rot * 0.25,
+                        w: ff.w,
+                        h: ff.h
+                    });
+                    if (macroLandedFlakes.length > 90) {
+                        macroLandedFlakes.shift();
+                    }
+                    macroFallingFlakes.splice(i, 1);
+                    continue;
+                }
+
+                ctxMacro.save();
+                ctxMacro.translate(ff.x, ff.y);
+                ctxMacro.rotate(ff.rot);
+                ctxMacro.fillStyle = '#9a3412';
+                ctxMacro.strokeStyle = '#ea580c';
+                ctxMacro.lineWidth = 1.2;
+                ctxMacro.beginPath();
+                ctxMacro.roundRect(-ff.w / 2, -ff.h / 2, ff.w, ff.h, 3);
+                ctxMacro.fill();
+                ctxMacro.stroke();
+                ctxMacro.restore();
+            }
+
+            ctxMacro.fillStyle = '#b91c1c';
+            ctxMacro.font = 'bold 12px Inter';
+            ctxMacro.fillText('❌ Fallen rust piles up on ground — new Fe surface rusts more seriously!', feCenterX, floorY + 25);
+
+            // =================================================================
+            // ANIMATE O2 & H2O MOLECULES ATTACKING BOTH BLOCKS
+            // =================================================================
+            macroO2.forEach(m => {
+                if (isPlaying) {
+                    // Aluminium side: O2 moves in and bounces off impermeable Al2O3
+                    m.distAl += m.dirAl * 0.95 * simSpeed;
+                    if (m.distAl <= 14) {
+                        m.dirAl = 1;
+                        const bouncePt = getPerimeterPoint(alCenterX, alCenterY, baseW / 2 + 4, baseH / 2 + 4, m.angleAl);
+                        macroRipples.push({ x: bouncePt.x, y: bouncePt.y, r: 2, alpha: 0.85 });
+                    }
+                    if (m.distAl > 72) {
+                        m.dirAl = -1;
+                    }
+
+                    // Iron side: O2 and H2O seep right through porous rust to attack inner Fe
+                    m.distFe += m.dirFe * 1.0 * simSpeed;
+                    if (m.distFe <= -6) {
+                        m.distFe = 72;
+                        m.angleFe += (Math.random() - 0.5) * 0.35;
+                    }
+                }
+
+                // Draw O2 molecule on Aluminium side
+                const alSurf = getPerimeterPoint(alCenterX, alCenterY, baseW / 2, baseH / 2, m.angleAl);
+                const ax = alSurf.x + Math.cos(m.angleAl) * m.distAl;
+                const ay = alSurf.y + Math.sin(m.angleAl) * m.distAl;
+                if (ay < floorY - 8 && ay > 38) {
+                    drawMolecule(ctxMacro, ax, ay, 'O2', false);
+                }
+
+                // Draw O2 / H2O molecule on Iron side
+                const feSurf = getPerimeterPoint(feCenterX, feCenterY, curHalfW, curHalfH, m.angleFe);
+                const fx = feSurf.x + Math.cos(m.angleFe) * m.distFe;
+                const fy = feSurf.y + Math.sin(m.angleFe) * m.distFe;
+                if (fy < floorY - 8 && fy > 38) {
+                    drawMolecule(ctxMacro, fx, fy, m.typeFe, m.distFe < 18);
+                }
+            });
+
+            // Draw bounce ripples on Aluminium's impermeable Al2O3 barrier
+            for (let i = macroRipples.length - 1; i >= 0; i--) {
+                const rp = macroRipples[i];
+                if (isPlaying) {
+                    rp.r += 0.6 * simSpeed;
+                    rp.alpha -= 0.05 * simSpeed;
+                }
+                if (rp.alpha <= 0) {
+                    macroRipples.splice(i, 1);
+                    continue;
+                }
+                ctxMacro.strokeStyle = `rgba(147, 51, 234, ${rp.alpha})`;
+                ctxMacro.lineWidth = 1.8;
+                ctxMacro.beginPath();
+                ctxMacro.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2);
+                ctxMacro.stroke();
+            }
+        }
+
+        // =========================================================================
+        // VIEW SWITCHING & WORKSHEET TABLE QUIZ INTERACTION
+        // =========================================================================
+        function setViewMode(mode) {
+            currentView = mode;
+            ['split', 'macro', 'table'].forEach(t => {
+                const section = document.getElementById('view-' + t);
+                const tab = document.getElementById('tab-' + t);
+                if (t === mode) {
+                    section.classList.remove('hidden');
+                    section.classList.add('flex');
+                    tab.className = 'tab-active px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold transition flex items-center gap-1.5';
+                } else {
+                    section.classList.add('hidden');
+                    section.classList.remove('flex');
+                    tab.className = 'px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5';
+                }
+            });
+            setTimeout(resizeCanvases, 30);
+        }
+
+        function toggleBlank(el) {
+            const ans = el.getAttribute('data-ans');
+            if (el.getAttribute('data-hidden') === 'true') {
+                el.innerHTML = ans;
+                el.setAttribute('data-hidden', 'false');
+                el.classList.remove('bg-blue-100', 'text-transparent', 'select-none');
+            } else {
+                el.setAttribute('data-hidden', 'true');
+                el.classList.add('bg-blue-100', 'text-transparent', 'select-none');
+            }
+        }
+
+        function toggleAllTableBlanks(reveal) {
+            document.querySelectorAll('.blank-box').forEach(el => {
+                const ans = el.getAttribute('data-ans');
+                if (reveal) {
+                    el.innerHTML = ans;
+                    el.setAttribute('data-hidden', 'false');
+                    el.classList.remove('bg-blue-100', 'text-transparent', 'select-none');
+                } else {
+                    el.setAttribute('data-hidden', 'true');
+                    el.classList.add('bg-blue-100', 'text-transparent', 'select-none');
+                }
+            });
+        }
+
+        // =========================================================================
+        // MAIN ANIMATION LOOP & WINDOW ONLOAD
+        // =========================================================================
+        function animate() {
+            if (currentView === 'split') {
+                updateAndDrawIron();
+                updateAndDrawAluminium();
+            } else if (currentView === 'macro') {
+                updateAndDrawMacro();
+            }
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', resizeCanvases);
+
+        window.onload = function () {
+            resizeCanvases();
+            initGrids();
+            resetMacroSim();
+            animate();
+        };
+    </script>
+</body>
+</html>
